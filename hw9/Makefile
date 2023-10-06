@@ -1,0 +1,7 @@
+all: YuG.CS5600.F23
+
+YuG.CS5600.F23: YuG.CS5600.F23.c
+	gcc -o YuG.CS5600.F23 YuG.CS5600.F23.c
+
+clean:
+	rm -f YuG.CS5600.F23

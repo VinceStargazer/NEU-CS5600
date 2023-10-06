@@ -1,0 +1,18 @@
+Question 1
+In a modern language running on a modern operating system, if the stack grows into the heap, it will cause a stack overflow error (In C, segmentation fault) and early program termination as there are virtual memory guard pages that prevent the stack from growing indefinitely.
+On the other hand, if the heap grows into the stack, it will cause a heap overflow that makes heap memory allocation behavior unsuccessful (e.g., malloc, realloc in C) and returns NULL.
+Reference:
+Ramsey, N. (2009, August 26). What Happens When Stack and Heap Collide. https://stackoverflow.com/questions/1334055/what-happens-when-stack-and-heap-collide
+
+Question 2
+If the location of the operating functions change by even the slightest amount (for instance, if new code was added to fix a bug), it would break the programs compiled for the previous version, as calls to the operating system would go to the wrong address. By adding a system call table, a fixed interface is presented to the program despite changes in the OS. The table is located at a fixed location so that the program can always find it in the same place.
+
+Question 3
+There are two issues related to this code fragment:
+First, it's not using 'calloc' function correctly. There should be two passed arguments instead of one - one for the number of elements to be allocated, the other for the size of each element. The correct usage should be: 
+char* block = calloc(2048, sizeof(char));
+'memset' function is also called problematically. The first argument should be a pointer to the block of memory to fill, rather than the actual value stored at that address. The proper usage should be:
+memset(block, 0xFF, 2048);
+Reference:
+C library function - calloc(). (n.d.). Tutorialspoint. https://www.tutorialspoint.com/c_standard_library/c_function_calloc.htm
+C library function - memset(). (n.d.). Tutorialspoint. https://www.tutorialspoint.com/c_standard_library/c_function_memset.htm
