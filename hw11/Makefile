@@ -10,4 +10,4 @@ readFile: readFile.c queue.c queue.h
 	gcc -o readFile readFile.c queue.c
 
 clean:
-	rm -f getRand cipher readFile
+	rm -f getRand cipher readFile output_batch_*

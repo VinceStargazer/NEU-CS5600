@@ -5,12 +5,8 @@
 
 int main(int argc, char *argv[]) {
     // Validate the arguments
-    if (argc < 3) {
-        printf("Usage: %s [-e/-d] \"string\"\n", argv[0]);
-        return -1;
-    }
-    if (strcmp(argv[1], "-e") != 0 && strcmp(argv[1], "-d") != 0) {
-        printf("Usage: %s [-e/-d] \"%s\"\n", argv[0], argv[2]);
+    if (argc != 2 || strcmp(argv[1], "-e") != 0 && strcmp(argv[1], "-d") != 0) {
+        printf("Usage: %s [-e/-d]\n", argv[0]);
         return -1;
     }
     // Initialize the Polybius table for encryption
@@ -41,9 +37,11 @@ int main(int argc, char *argv[]) {
         table[i]->key = (char) ('{' + i - '`' + ' ' - 1);
         table[i]->value = rows[row] * 10 + cols[col];
     }
+    
     // Cipher each word passed as arguments
-    for (int i = 2; i < argc; i++) {
-        char *edittext = strcmp(argv[1], "-e") == 0 ? pbEncode(argv[i], table) : pbDecode(argv[i], table);
+    char word[100];
+    while (scanf("%s", word) != EOF) {
+        char *edittext = strcmp(argv[1], "-e") == 0 ? pbEncode(word, table) : pbDecode(word, table);
         if (edittext == NULL) {
             return -1;
         }
