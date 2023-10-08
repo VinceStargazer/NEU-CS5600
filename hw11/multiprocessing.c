@@ -89,7 +89,7 @@ int main() {
         pid_t pid = fork();
         if (pid < 0) {
             perror("fork");
-            exit(EXIT_FAILURE);
+            return -1;
         }
         char* words[BATCH_SIZE];
         int wordCount = 0;

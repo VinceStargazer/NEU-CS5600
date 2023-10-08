@@ -5,4 +5,3 @@ typedef struct {
 
 char *pbEncode(const char *plaintext, table_t **table);
 char *pbDecode(const char *ciphertext, table_t **table);
-char *handleInput(const char *input, const char *option);
