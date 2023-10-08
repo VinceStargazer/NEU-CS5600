@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
         table[i]->value = rows[row] * 10 + cols[col];
     }
     
-    // Cipher each word passed as arguments
+    // Cipher each word passed from stdin
     char word[100];
     while (scanf("%s", word) != EOF) {
         char *edittext = strcmp(argv[1], "-e") == 0 ? pbEncode(word, table) : pbDecode(word, table);
