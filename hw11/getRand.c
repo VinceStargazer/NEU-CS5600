@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
@@ -52,27 +53,29 @@ int main(int argc, char *argv[]) {
     while (fgets(buffer, sizeof(buffer), dict) != NULL) {
         lineCount++;
     }
-
+    fseek(dict, 0, SEEK_SET);
+    // Prepare for a word array for the convenience of random word generation
+    char *wordsArray[lineCount];
+    for (int i = 0; i < lineCount; i++) {
+        fgets(buffer, sizeof(buffer), dict);
+        wordsArray[i] = (char *)malloc((strlen(buffer) + 1) * sizeof(char));
+        if (wordsArray[i] == NULL) {
+            perror("malloc");
+            return -1;
+        }
+        strcpy(wordsArray[i], buffer);
+    }
+    fclose(dict);
     // Set the seed with current time
     lcgSeed = time(NULL);
     for (int i = 0; i < num; i++) {
         // Generate a random line number in the file
         int randomLine = getRand(0, lineCount - 1);
-        // Read the word at the random line number
-        fseek(dict, 0, SEEK_SET);
-        char word[100];
-        for (int j = 0; j < randomLine; j++) {
-            if (fgets(word, sizeof(word), dict) == NULL) {
-                perror("Error reading dictionary file");
-                fclose(dict);
-                fclose(file);
-                return -1;
-            }
-        }
-        // Print the random word
-        fprintf(file, "%s", word);
+        fprintf(file, "%s", wordsArray[randomLine]);
     }
-    fclose(dict);
+    for (int i = 0; i < lineCount; i++) {
+        free(wordsArray[i]);
+    }
     fclose(file);
     return 0;
 }

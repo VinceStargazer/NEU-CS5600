@@ -9,3 +9,4 @@
 is the same as what you indicated in getRand argument
 2. Run `./cipher -d` and then try typing down some encoded strings in the terminal to see if they can be
 decoded to the corresponding word in random_words.txt. You can also try `./cipher -e` to test it reversely
+3. Run `./test.sh` to test some edge cases
