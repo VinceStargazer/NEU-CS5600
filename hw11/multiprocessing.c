@@ -70,6 +70,7 @@ int main() {
     while (fgets(buffer, sizeof(buffer), file) != NULL) {
         char *word = (char *)malloc(strlen(buffer) * sizeof(char));
         if (word == NULL) {
+            fclose(file);
             perror("Failed to allocate word memory");
             return -1;
         }
@@ -83,8 +84,10 @@ int main() {
         add2q(&queue, word);
         totalWords++;
     }
+    fclose(file);
 
     int batchCount = (totalWords + BATCH_SIZE - 1) / BATCH_SIZE;
+    // Create as many processes as batch files
     for (int i = 0; i < batchCount; i++) {
         pid_t pid = fork();
         if (pid < 0) {
@@ -93,6 +96,7 @@ int main() {
         }
         char* words[BATCH_SIZE];
         int wordCount = 0;
+        // Encrypt 100 words at a time
         while (wordCount < BATCH_SIZE && queue.front != NULL) {
             words[wordCount++] = (char *)popQ(&queue);
         }

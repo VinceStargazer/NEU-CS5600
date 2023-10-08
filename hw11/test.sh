@@ -1,6 +1,21 @@
 #!/bin/bash
 
-# Test a file without sentences
+# Test when the getRand program cannot be found
+make clean
+./getRand 1000 random_words.txt
+if [ $? -eq 0 ]; then
+    echo "Error: 'getRand' program somehow exists."
+else
+    ./multiprocessing
+    if [ $? -eq 0 ]; then
+        echo "Error: 'multiprocessing' somehow exists."
+    else
+        echo "Success: 'getRand' and 'multiprocessing' program not found."
+    fi
+fi
+make clean
+
+# Test 0 word
 make
 ./getRand 0 random_words.txt
 if [ $? -eq 0 ]; then
@@ -16,20 +31,6 @@ if [ $? -eq 0 ]; then
     fi
 else
     echo "Error: 'getRand' program failed."
-fi
-make clean
-
-# Test when the getRand program cannot be found
-./getRand 0 random_words.txt
-if [ $? -eq 0 ]; then
-    echo "Error: 'getRand' program somehow exists."
-else
-    ./multiprocessing
-    if [ $? -eq 0 ]; then
-        echo "Error: 'multiprocessing' somehow exists."
-    else
-        echo "Success: 'getRand' and 'multiprocessing' program not found."
-    fi
 fi
 make clean
 

@@ -73,9 +73,10 @@ int main(int argc, char *argv[]) {
         int randomLine = getRand(0, lineCount - 1);
         fprintf(file, "%s", wordsArray[randomLine]);
     }
+    // Close file and release memory
+    fclose(file);
     for (int i = 0; i < lineCount; i++) {
         free(wordsArray[i]);
     }
-    fclose(file);
     return 0;
 }
