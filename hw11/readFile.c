@@ -9,11 +9,11 @@
 
 void encryptWords(char* words[], int wordCount, int fileIndex) {
     int pipefd[2];
-    // Create a pipe
     if (pipe(pipefd) == -1) {
         perror("pipe");
         exit(EXIT_FAILURE);
     }
+
     // Fork a child process
     pid_t pid;
     if ((pid = fork()) == -1) {
@@ -24,25 +24,19 @@ void encryptWords(char* words[], int wordCount, int fileIndex) {
     if (pid == 0) {
         // Child process: close write end of the pipe
         close(pipefd[1]);
-
         // Redirect stdin to read from the pipe
         dup2(pipefd[0], STDIN_FILENO);
         close(pipefd[0]);
-
         // Redirect stdout to write to a file
         char fileName[20];
         sprintf(fileName, "output_batch_%d.txt", fileIndex);
         freopen(fileName, "w", stdout);
-
-        // Execute the cipher program
-        if (execl("./cipher", "./cipher", "-e", NULL) == -1) {
-            perror("execl");
-            exit(EXIT_FAILURE);
-        }
+        execl("./cipher", "./cipher", "-e", NULL);
+        perror("execl");
+        exit(EXIT_FAILURE);
     } else {
         // Parent process: close read end of the pipe
         close(pipefd[0]);
-
         // Write data to the pipe
         for (int i = 0; i < wordCount; i++) {
             if (write(pipefd[1], words[i], strlen(words[i])) == -1) {
@@ -54,8 +48,6 @@ void encryptWords(char* words[], int wordCount, int fileIndex) {
                 exit(EXIT_FAILURE);
             }
         }
-
-        // Close write end of the pipe to signal the end of input
         close(pipefd[1]);
         wait(NULL);
     }
@@ -74,7 +66,7 @@ int main() {
     queue.rear = NULL;
     // Scan the input file and add words to queue
     char buffer[100];
-    int wordCount = 0;
+    int totalWords = 0;
     while (fgets(buffer, sizeof(buffer), file) != NULL) {
         char *word = (char *)malloc(strlen(buffer) * sizeof(char));
         if (word == NULL) {
@@ -89,28 +81,30 @@ int main() {
             word[i] = buffer[i];
         }
         add2q(&queue, word);
-        wordCount++;
+        totalWords++;
     }
 
-    int batchCount = (wordCount + BATCH_SIZE - 1) / BATCH_SIZE;
+    int batchCount = (totalWords + BATCH_SIZE - 1) / BATCH_SIZE;
     for (int i = 0; i < batchCount; i++) {
         pid_t pid = fork();
         if (pid < 0) {
             perror("fork");
             exit(EXIT_FAILURE);
-        } else if (pid == 0) {
-            char* words[BATCH_SIZE];
-            int wordCount = 0;
-            while (wordCount < BATCH_SIZE && queue.front != NULL) {
-                words[wordCount++] = (char *)popQ(&queue);
-            }
+        }
+        char* words[BATCH_SIZE];
+        int wordCount = 0;
+        while (wordCount < BATCH_SIZE && queue.front != NULL) {
+            words[wordCount++] = (char *)popQ(&queue);
+        }
+        if (pid == 0) {
+            // Call cipher program only from child process
             encryptWords(words, wordCount, i + 1);
+            return 0;
         }
     }
-
+    
     for (int i = 0; i < batchCount; i++) {
         wait(NULL);
     }
-
     return 0;
 }
