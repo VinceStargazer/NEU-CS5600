@@ -103,7 +103,13 @@ int main() {
         if (pid == 0) {
             // Call cipher program only from child process
             encryptWords(words, wordCount, i + 1);
+            for (int j = 0; j < wordCount; j++) {
+                free(words[j]);
+            }
             return 0;
+        }
+        for (int j = 0; j < wordCount; j++) {
+            free(words[j]);
         }
     }
     
