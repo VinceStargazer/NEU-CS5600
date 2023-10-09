@@ -2,18 +2,20 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
+#include <semaphore.h>
 #include "queue.h"
 #include "cipher.h"
 
 #define BATCH_SIZE 100
 
 typedef struct thread_t {
-    char** words;
-    int wordCount;
+    queue_t* queue;
     int fileIndex;
 } thread_t;
 
-// Thread function to encode words
+sem_t semaphore;
+
+// Thread function to pop words from queue and encode words
 void* encryptWords(void* arg) {
     thread_t* data = (thread_t*)arg;
     char fileName[20];
@@ -24,16 +26,17 @@ void* encryptWords(void* arg) {
         perror("Failed to create output file");
         pthread_exit(NULL);
     }
-    printf("Count of %d: %d\n", data->fileIndex, data->wordCount);
-    for (int i = 0; i < data->wordCount; i++) {
-        printf("%s\n", data->words[i]);
-        char* ciphertext = cipher(data->words[i]);
+    for (int i = 0; i < BATCH_SIZE && data->queue->front != NULL; i++) {
+        sem_wait(&semaphore);
+        char* word = popQ(data->queue);
+        sem_post(&semaphore);
+        char* ciphertext = cipher(word);
+        free(word);
         if (ciphertext == NULL) {
             perror("cipher");
             pthread_exit(NULL);
         }
         fprintf(output, "%s\n", ciphertext);
-        free(data->words[i]);
         free(ciphertext);
     }
 
@@ -42,6 +45,7 @@ void* encryptWords(void* arg) {
 }
 
 int main() {
+    sem_init(&semaphore, 0, 1);
     // Open text file
     FILE *file = fopen("random_words.txt", "r");
     if (file == NULL) {
@@ -81,16 +85,7 @@ int main() {
     pthread_t threads[batchCount];
     thread_t threadData[batchCount];
     for (int i = 0; i < batchCount; i++) {
-        threadData[i].words = malloc(BATCH_SIZE * sizeof(char*));
-        if (threadData[i].words == NULL) {
-            perror("malloc");
-            return -1;
-        }
-        int wordCount = 0;
-        while (wordCount < BATCH_SIZE && queue.front != NULL) {
-            threadData[i].words[wordCount++] = strdup(popQ(&queue));
-        }
-        threadData[i].wordCount = wordCount;
+        threadData[i].queue = &queue;
         threadData[i].fileIndex = i + 1;
         int rc = pthread_create(&threads[i], NULL, encryptWords, (void*)&threadData[i]);
         if (rc) {
@@ -100,10 +95,9 @@ int main() {
         printf("Thread %d created\n", i);
     }
 
-    // Wait for threads to complete
     for (int i = 0; i < batchCount; i++) {
         pthread_join(threads[i], NULL);
-        free(threadData[i].words);
     }
+    sem_destroy(&semaphore);
     return 0;
 }
