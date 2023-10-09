@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
         return -1;
     }
     // Initialize the Polybius table for encryption
-    table_t** table = (table_t**)malloc(81 * sizeof(table_t*));
+    table_t table[TABLE_SIZE];
     if (table == NULL) {
         printf("Fail to allocate heap memory.\n");
         return -1;
@@ -19,23 +19,13 @@ int main(int argc, char *argv[]) {
     // Special characters are added to the table
     for (char c = ' '; c <= '`'; c++) {
         int idx = c - ' ', row = idx / 9, col = idx % 9;
-        table[idx] = (table_t*)malloc(sizeof(table_t));
-        if (table[idx] == NULL) {
-            printf("Fail to allocate heap memory.\n");
-            return -1;
-        }
-        table[idx]->key = c;
-        table[idx]->value = rows[row] * 10 + cols[col];
+        table[idx].key = c;
+        table[idx].value = rows[row] * 10 + cols[col];
     }
     for (int i = '`' - ' ' + 1; i < '`' - ' ' + 5; i++) {
         int row = i / 9, col = i % 9;
-        table[i] = (table_t*)malloc(sizeof(table_t));
-        if (table[i] == NULL) {
-            printf("Fail to allocate heap memory.\n");
-            return -1;
-        }
-        table[i]->key = (char) ('{' + i - '`' + ' ' - 1);
-        table[i]->value = rows[row] * 10 + cols[col];
+        table[i].key = (char) ('{' + i - '`' + ' ' - 1);
+        table[i].value = rows[row] * 10 + cols[col];
     }
     
     // Cipher each word passed from stdin
@@ -49,10 +39,5 @@ int main(int argc, char *argv[]) {
         free(edittext);
     }
 
-    // free the allocated heap memory
-    for (int i = 0; i < 81; i++) {
-        free(table[i]);
-    }
-    free(table);
     return 0;
 }

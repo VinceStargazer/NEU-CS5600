@@ -26,10 +26,10 @@ void* encryptWords(void* arg) {
         perror("Failed to create output file");
         pthread_exit(NULL);
     }
+    // Use semaphore to prevent race condition
+    sem_wait(&semaphore);
     for (int i = 0; i < BATCH_SIZE && data->queue->front != NULL; i++) {
-        sem_wait(&semaphore);
         char* word = popQ(data->queue);
-        sem_post(&semaphore);
         char* ciphertext = cipher(word);
         free(word);
         if (ciphertext == NULL) {
@@ -39,6 +39,7 @@ void* encryptWords(void* arg) {
         fprintf(output, "%s\n", ciphertext);
         free(ciphertext);
     }
+    sem_post(&semaphore);
 
     fclose(output);
     pthread_exit(NULL);
