@@ -55,7 +55,7 @@ void encryptWords(char* words[], int wordCount, int fileIndex) {
 
 int main() {
     // Open text file
-    FILE *file = fopen("random_words.txt", "r");
+    FILE* file = fopen("random_words.txt", "r");
     if (file == NULL) {
         perror("Failed to open file");
         return -1;
@@ -68,7 +68,7 @@ int main() {
     char buffer[100];
     int totalWords = 0;
     while (fgets(buffer, sizeof(buffer), file) != NULL) {
-        char *word = (char *)malloc(strlen(buffer) * sizeof(char));
+        char* word = (char*)malloc(strlen(buffer) * sizeof(char));
         if (word == NULL) {
             fclose(file);
             perror("Failed to allocate word memory");
@@ -98,7 +98,7 @@ int main() {
         int wordCount = 0;
         // Encrypt 100 words at a time
         while (wordCount < BATCH_SIZE && queue.front != NULL) {
-            words[wordCount++] = (char *)popQ(&queue);
+            words[wordCount++] = (char*)popQ(&queue);
         }
         if (pid == 0) {
             // Call cipher program only from child process

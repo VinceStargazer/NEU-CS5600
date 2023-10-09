@@ -4,9 +4,9 @@
 #include "polybius.h"
 
 /* This function returns an encoded version of the string plaintext using the Polybius table */
-char *pbEncode(const char *plaintext, table_t* table) {
+char* pbEncode(const char* plaintext, table_t* table) {
     size_t len = strlen(plaintext);
-    char *ciphertext = (char*)malloc(2 * len * sizeof(char) + 1);
+    char* ciphertext = (char*)malloc(2 * len * sizeof(char) + 1);
     for (size_t i = 0; i < len; i++) {
         char key = plaintext[i];
         // lower case letters are treated as upper case
@@ -34,7 +34,7 @@ char *pbEncode(const char *plaintext, table_t* table) {
 }
 
 /* This function returns a decoded version of the string ciphertext using the Polybius table */
-char *pbDecode(const char *ciphertext, table_t *table) {
+char* pbDecode(const char* ciphertext, table_t* table) {
     size_t len = strlen(ciphertext);
     char *plaintext = (char*)malloc(len * sizeof(char) / 2 + 1);
     for (size_t i = 0; i < len / 2; i++) {

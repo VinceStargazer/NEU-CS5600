@@ -25,9 +25,9 @@ int main(int argc, char *argv[]) {
         printf("Usage: %s (-a) <number> <file_name\n", argv[0]);
         return -1;
     }
-    char *numStr = argc == 3 ? argv[1] : argv[2];
+    char* numStr = argc == 3 ? argv[1] : argv[2];
     int num = 0;
-    for (char *pt = numStr; *pt != '\0'; pt++) {
+    for (char* pt = numStr; *pt != '\0'; pt++) {
         if (*pt >= '0' && *pt <= '9') {
             num = 10 * num + *pt - '0';
         } else {
@@ -35,14 +35,14 @@ int main(int argc, char *argv[]) {
             return -1;
         }
     }
-    char *file_name = argc == 3 ? argv[2] : argv[3];
-    FILE *file = argc == 3 ? fopen(file_name, "w") : fopen(file_name, "a");
+    char* file_name = argc == 3 ? argv[2] : argv[3];
+    FILE* file = argc == 3 ? fopen(file_name, "w") : fopen(file_name, "a");
     if (file == NULL) {
         perror("Failed to open file");
         return -1;
     }
     // Open Unix built-in dictionary
-    FILE *dict = fopen("/usr/share/dict/words", "r");
+    FILE* dict = fopen("/usr/share/dict/words", "r");
     if (dict == NULL) {
         perror("Failed to open dictionary");
         return -1;
@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
     }
     fseek(dict, 0, SEEK_SET);
     // Prepare for a word array for the convenience of random word generation
-    char *wordsArray[lineCount];
+    char* wordsArray[lineCount];
     for (int i = 0; i < lineCount; i++) {
         fgets(buffer, sizeof(buffer), dict);
         wordsArray[i] = (char *)malloc((strlen(buffer) + 1) * sizeof(char));

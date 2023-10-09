@@ -6,7 +6,7 @@ typedef struct {
     int value;
 } table_t;
 
-char *pbEncode(const char *plaintext, table_t* table);
-char* cipher(const char *word);
+char* pbEncode(const char* plaintext, table_t* table);
+char* cipher(const char* word);
 
 #endif

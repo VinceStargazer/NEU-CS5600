@@ -6,9 +6,9 @@
 #define TABLE_SIZE 81
 
 /* This function returns an encoded version of the string plaintext using the Polybius table */
-char *pbEncode(const char *plaintext, table_t* table) {
+char* pbEncode(const char* plaintext, table_t* table) {
     size_t len = strlen(plaintext);
-    char *ciphertext = (char*)malloc(2 * len * sizeof(char) + 1);
+    char* ciphertext = (char*)malloc(2 * len * sizeof(char) + 1);
     for (size_t i = 0; i < len; i++) {
         char key = plaintext[i];
         // lower case letters are treated as upper case
@@ -56,6 +56,5 @@ char* cipher(const char* word) {
         table[i].value = rows[row] * 10 + cols[col];
     }
 
-    char *edittext = pbEncode(word, table);
-    return edittext;
+    return pbEncode(word, table);
 }
