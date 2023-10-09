@@ -5,6 +5,6 @@
 4. (Optional) Run `make clean` to remove all created files
 
 # How to check the correctness
-1. Browse through created output text files to make sure the number of encoded strings (each for a line)
-is the same as what you indicated in getRand argument\
+1. Browse through output text files to make sure the total number of encoded strings (each for a line)
+is the same as what you indicated in getRand argument. Meanwhile, each file should contain 100 or less lines
 2. Run `./test.sh` to test some edge cases

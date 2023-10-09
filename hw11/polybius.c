@@ -1,11 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-typedef struct {
-    char key;
-    int value;
-} table_t;
+#include "polybius.h"
 
 /* This function returns an encoded version of the string plaintext using the Polybius table */
 char *pbEncode(const char *plaintext, table_t **table) {

@@ -1,3 +1,6 @@
+#ifndef POLYBIUS_H
+#define POLYBIUS_H
+
 typedef struct {
     char key;
     int value;
@@ -5,3 +8,5 @@ typedef struct {
 
 char *pbEncode(const char *plaintext, table_t **table);
 char *pbDecode(const char *ciphertext, table_t **table);
+
+#endif

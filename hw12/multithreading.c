@@ -92,7 +92,6 @@ int main() {
             printf("Error: Return code from pthread_create() is %d\n", rc);
             return -1;
         }
-        printf("Thread %d created\n", i);
     }
 
     for (int i = 0; i < batchCount; i++) {
