@@ -15,13 +15,9 @@ public class Generator implements Runnable {
     public void run() {
         try {
             for (int i = 0; i < STRINGS_PER_THREAD; i++) {
-                String threadId = Thread.currentThread().getId() + "-";
-                String randomNumber = generateRandomNumber();
-                String data = threadId + randomNumber;
-
+                String data = Thread.currentThread().getId() + "-" + generateRandomNumber();
                 buffer.deposit(data);
                 System.out.println("Deposited: " + data);
-                Thread.sleep(random.nextInt(100));
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
