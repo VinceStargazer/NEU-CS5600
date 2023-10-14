@@ -1,3 +1,9 @@
+/**
+ * Title: Java Concurrency - Part 5 : Monitors (Locks and Conditions)
+ * Author: Wicht, B
+ * Date: 2010-09-06
+ * Availability: https://baptiste-wicht.com/posts/2010/09/java-concurrency-part-5-monitors-locks-and-conditions.html
+ */
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
