@@ -9,26 +9,36 @@ const char* MSG_FORMAT_IN =
 const char* MSG_FORMAT_OUT = 
     "{\n\t\"id\": \"%s\", \n\t\"time\": %ld, \n\t\"sender\": \"%s\", \n\t\"receiver\": \"%s\", \n\t\"content\": \"%s\", \n\t\"flag\": %d\n}\n";
 
-message_t* create_msg(char* sender, char* receiver, char* content, int flag) {
+// Function to create a message object based on every given field
+message_t* init_msg(char* id, time_t time, char* sender, char* receiver, char* content, int flag) {
     message_t* message = (message_t*)malloc(sizeof(message_t));
     if (message == NULL) {
         perror("malloc");
         exit(EXIT_FAILURE);
     }
-    message->id = (char*)malloc(37 * sizeof(char));
-    if (message->id == NULL) {
-        perror("malloc");
-        exit(EXIT_FAILURE);
-    }
-    generate_uuid(message->id);
-    message->time = time(NULL);
-    message->sender = strdup(sender);
-    message->receiver = strdup(receiver);
-    message->content = strdup(content);
+    strcpy(message->id, id);
+    message->time = time;
+    strcpy(message->sender, sender);
+    strcpy(message->receiver, receiver);
+    strcpy(message->content, content);
     message->flag = flag;
     return message;
 }
 
+// Function to create the unique ID and current timestamp for init_msg()
+message_t* create_msg(char* sender, char* receiver, char* content, int flag) {
+    char* id = (char*)malloc(37 * sizeof(char));
+    if (id == NULL) {
+        perror("malloc");
+        exit(EXIT_FAILURE);
+    }
+    generate_uuid(id);
+    message_t* message = init_msg(id, time(NULL), sender, receiver, content, flag);
+    free(id);
+    return message;
+}
+
+// Function to store a message object in the current directory in a form similar to JSON
 void store_msg(message_t* message) {
     FILE* file = fopen("messages.dat", "a");
     if (file == NULL) {
@@ -40,29 +50,23 @@ void store_msg(message_t* message) {
     fclose(file);
 }
 
+// Function to retrieve a message from the message store by the given ID. Returns NULL if message not found
 message_t* retrieve_msg(char* uuid) {
     FILE* file = fopen("messages.dat", "r");
     if (file == NULL) {
         perror("fopen");
         exit(EXIT_FAILURE);
     }
-    message_t* message = create_msg("", "", "", 0);
-    while (fscanf(file, MSG_FORMAT_IN, message->id, &message->time, message->sender, 
-            message->receiver, message->content, &message->flag) == 6) {
-        if (strcmp(message->id, uuid) == 0) {
+    message_t message;
+    while (fscanf(file, MSG_FORMAT_IN, message.id, &message.time, message.sender, 
+            message.receiver, message.content, &message.flag) == 6) {
+        if (strcmp(message.id, uuid) == 0) {
             fclose(file);
-            return message;
+            message_t* result = init_msg(message.id, message.time, message.sender, 
+                message.receiver, message.content, message.flag);
+            return result;
         }
     }
-    free_message(message);
     fclose(file);
     return NULL;
-}
-
-void free_message(message_t* message) {
-    free(message->id);
-    free(message->sender);
-    free(message->receiver);
-    free(message->content);
-    free(message);
 }

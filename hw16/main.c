@@ -12,9 +12,10 @@ int main() {
     message_t* message = create_msg(sender, receiver, content, flag);
     char* uuid = strdup(message->id);
     store_msg(message);
-    free_message(message);
+    free(message);
 
     message = retrieve_msg(uuid);
+    free(uuid);
     if (message != NULL) {
         printf("id: %s\n", message->id);
         printf("time: %s", ctime(&message->time));
@@ -22,10 +23,9 @@ int main() {
         printf("receiver: %s\n", message->receiver);
         printf("content: %s\n", message->content);
         printf("flag: %d\n", message->flag);
-        free_message(message);
+        free(message);
     } else {
         printf("Message not found!\n");
     }
-    free(uuid);
     return 0;
 }
