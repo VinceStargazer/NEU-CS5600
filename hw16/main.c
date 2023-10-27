@@ -5,6 +5,7 @@
 #include "message.h"
 
 int main() {
+    // Deserialize from disk file
     list_t* store = read_store_from_disk();
     char* command = NULL;
     size_t bufsize = 0;
@@ -45,6 +46,11 @@ int main() {
 
             printf("Was the message delivered? (1/0): ");
             scanf("%d%*c", &flag);
+
+            if (flag != 1 && flag != 0) {
+                printf("Invalid answer!\n");
+                continue;
+            }
             
             message_t* message = create_msg(sender, receiver, content, flag);
             store_msg(store, message);
@@ -72,7 +78,7 @@ int main() {
     }
 
     
-    // Save the updated linked list and free allocated memory
+    // Free allocated memory and serialize to disk file
     free(command);
     save_store_to_disk(store);
     free_list(store);
