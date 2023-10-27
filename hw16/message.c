@@ -51,7 +51,7 @@ void store_msg(message_t* message) {
 }
 
 // Function to retrieve a message from the message store by the given ID. Returns NULL if message not found
-message_t* retrieve_msg(char* uuid) {
+message_t* retrieve_msg(char* id) {
     FILE* file = fopen("messages.dat", "r");
     if (file == NULL) {
         perror("fopen");
@@ -60,7 +60,7 @@ message_t* retrieve_msg(char* uuid) {
     message_t message;
     while (fscanf(file, MSG_FORMAT_IN, message.id, &message.time, message.sender, 
             message.receiver, message.content, &message.flag) == 6) {
-        if (strcmp(message.id, uuid) == 0) {
+        if (strcmp(message.id, id) == 0) {
             fclose(file);
             message_t* result = init_msg(message.id, message.time, message.sender, 
                 message.receiver, message.content, message.flag);
