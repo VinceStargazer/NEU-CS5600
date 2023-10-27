@@ -4,53 +4,78 @@
 #include <time.h>
 #include "message.h"
 
-int main(int argc, char* argv[]) {
-    if (argc < 3) {
-        printf("Usage: ./main [-c/-r] <args>\n");
-        return -1;
+int main() {
+    list_t* store = read_store_from_disk();
+    char* command = NULL;
+    size_t bufsize = 0;
+    size_t characters;
+
+    while (1) {
+        printf("Enter a command: ");
+
+        // Read a line from stdin
+        characters = getline(&command, &bufsize, stdin);
+        
+        // Remove the newline character from the end of the input
+        if (characters > 0 && command[characters - 1] == '\n') {
+            command[characters - 1] = '\0';
+        }
+        
+        // Check for exit condition
+        if (strcmp(command, "q") == 0 || strcmp(command, "quit") == 0) {
+            printf("Exiting the program.\n");
+            break;
+        }
+
+        if (strcmp(command, "c") == 0 || strcmp(command, "create") == 0) {
+            // Create mode
+            char sender[20];
+            char receiver[20];
+            char content[200];
+            int flag = -1;
+
+            printf("Enter the message sender: ");
+            scanf(" %20[^\n]%*c", sender);
+
+            printf("Enter the message receiver: ");
+            scanf(" %20[^\n]%*c", receiver);
+
+            printf("Enter the message content: ");
+            scanf(" %200[^\n]%*c", content);
+
+            printf("Was the message delivered? (1/0): ");
+            scanf("%d%*c", &flag);
+            
+            message_t* message = create_msg(sender, receiver, content, flag);
+            store_msg(store, message);
+            printf("A message of ID %s is created and stored.\n", message->id);
+        } else if (strcmp(command, "r") == 0 || strcmp(command, "retrieve") == 0) {
+            // Retrieve mode
+            char id[36];
+            printf("Enter the message ID: ");
+            scanf(" %36[^\n]%*c", id);
+
+            message_t* message = retrieve_msg(store, id);
+            if (message == NULL) {
+                printf("Message not found!\n");
+            } else {
+                printf("Message found:\n");
+                printf("\ttime: %s", ctime(&message->time));
+                printf("\tsender: %s\n", message->sender);
+                printf("\treceiver: %s\n", message->receiver);
+                printf("\tcontent: %s\n", message->content);
+                printf("\tflag: %d\n", message->flag);
+            }
+        } else {
+            printf("Command not found!\n");
+        }
     }
 
-    if (strcmp(argv[1], "-c") == 0) {
-        if (argc != 6 || strcmp(argv[5], "0") != 0 && strcmp(argv[5], "1") != 0) {
-            printf("Usage: ./main -c <sender> <receiver> <\"content\"> [1/0]\n");
-            return -1;
-        } else if (strlen(argv[2]) > 20 || strlen(argv[3]) > 20) {
-            printf("Sender/Receiver max character: 20\n");
-            return -1;
-        } else if (strlen(argv[4]) > 200) {
-            printf("Content max character: 20\n");
-            return -1;
-        }
-        // Create mode: create a message and save it to message store
-        message_t* message = create_msg(argv[2], argv[3], argv[4], atoi(argv[5]));
-        store_msg(message);
-        printf("A message of ID %s is created and stored.\n", message->id);
-        free(message);
-    } else if (strcmp(argv[1], "-r") == 0) {
-        if (argc != 3) {
-            printf("Usage: ./main -r <id>\n");
-            return -1;
-        } else if (strlen(argv[2]) != 36) {
-            printf("ID length must be 36!\n");
-            return -1;
-        }
-        // Retrieve mode: find and display a message by its identifier
-        message_t* message = retrieve_msg(argv[2]);
-        if (message != NULL) {
-            printf("Message found:\n");
-            printf("time: %s", ctime(&message->time));
-            printf("sender: %s\n", message->sender);
-            printf("receiver: %s\n", message->receiver);
-            printf("content: %s\n", message->content);
-            printf("flag: %d\n", message->flag);
-            free(message);
-        } else {
-            printf("Message not found!\n");
-        }
-    } else {
-        printf("Usage: ./main [-c/-r] <args>");
-        return -1;
-    }
+    
+    // Save the updated linked list and free allocated memory
+    free(command);
+    save_store_to_disk(store);
+    free_list(store);
 
     return 0;
 }
