@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
         return -1;
     }
     // Open Unix built-in dictionary
-    FILE *dict = fopen("/usr/share/dict/words", "r");
+    FILE *dict = fopen("words.txt", "r");
     if (dict == NULL) {
         perror("Failed to open dictionary");
         return -1;
