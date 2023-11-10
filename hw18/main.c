@@ -5,7 +5,7 @@
 #include "message.h"
 
 int main() {
-    // Open .env and find global variables
+    // Open .env and locate global variables
     FILE* env_file = fopen(".env", "r");
     if (env_file == NULL) {
         perror("Error opening .env file");
@@ -14,12 +14,29 @@ int main() {
     int message_size = 0, cache_capacity = 0;
     char line[BUFSIZ];
     while (fgets(line, BUFSIZ, env_file) && (message_size == 0 || cache_capacity == 0)) {
+        // parse the input line by '=' to read key and value
         char* equals = strchr(line, '=');
+        if (equals != NULL) {
+            *equals = '\0';
+            if (strcmp(line, "MESSAGE_SIZE") == 0) {
+                message_size = atoi(equals + 1);
+            } else if (strcmp(line, "CACHE_CAPACITY") == 0) {
+                cache_capacity = atoi(equals + 1);
+            }
+        }
+    }
+    fclose(env_file);
+    if (message_size == 0) {
+        perror("Message size not found in .env file");
+        return -1;
+    }
+    if (cache_capacity == 0) {
+        perror("Cache capacity not found in .env file");
+        return -1;
     }
 
-    fclose(env_file);
     // Initialize a LRU cache
-    lru_cache* cache = init_cache(100);
+    lru_cache* cache = init_cache(cache_capacity);
     char* command = NULL;
     size_t bufsize = 0;
     size_t characters;
@@ -85,6 +102,10 @@ int main() {
                 printf("\tcontent: %s\n", message->content);
                 printf("\tflag: %d\n", message->flag);
             }
+        } else if (strcmp(command, "dc") == 0 || strcmp(command, "display cache") == 0) {
+            display_cache(cache);
+        } else if (strcmp(command, "dm") == 0 || strcmp(command, "display map") == 0) {
+            display_map(cache->map);
         } else {
             printf("Command not found!\n");
         }
@@ -93,6 +114,6 @@ int main() {
     
     // Free allocated memory and serialize to disk file
     free(command);
-
+    free_cache(cache);
     return 0;
 }

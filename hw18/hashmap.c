@@ -1,10 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include "hashmap.h"
 
-unsigned int hash(void* key) {
-    return (unsigned int)key % HASH_MAP_SIZE;
+unsigned int hash(char* key) {
+    unsigned int hashValue = 0;
+    while (*key) {
+        hashValue += *key;
+        key++;
+    }
+    return hashValue % HASH_MAP_SIZE;
 }
 
 HashMap* init_map() {
@@ -13,11 +19,11 @@ HashMap* init_map() {
     return map;
 }
 
-void* map_get(HashMap* map, void* key) {
+void* map_get(HashMap* map, char* key) {
     unsigned int index = hash(key);
     Node* current = map->buckets[index];
     while (current != NULL) {
-        if (current->key == key) {
+        if (strcmp(current->key, key) == 0) {
             return current->value;
         }
         current = current->next;
@@ -25,7 +31,7 @@ void* map_get(HashMap* map, void* key) {
     return NULL; // Key not found
 }
 
-void map_put(HashMap* map, void* key, void* value) {
+void map_put(HashMap* map, char* key, void* value) {
     if (map_get(map, key) != NULL) {
         return;
     }
@@ -38,7 +44,7 @@ void map_put(HashMap* map, void* key, void* value) {
     map->size++;
 }
 
-void map_remove(HashMap* map, void* key) {
+void map_remove(HashMap* map, char* key) {
     unsigned int index = hash(key);
     Node* current = map->buckets[index];
     Node* prev = NULL;
@@ -61,7 +67,7 @@ void map_remove(HashMap* map, void* key) {
     }
 }
 
-void map_free(HashMap* map) {
+void free_map(HashMap* map) {
     for (int i = 0; i < HASH_MAP_SIZE; ++i) {
         Node* current = map->buckets[i];
         while (current != NULL) {
@@ -71,4 +77,14 @@ void map_free(HashMap* map) {
         }
     }
     free(map);
+}
+
+void display_map(HashMap* map) {
+    for (int i = 0; i < HASH_MAP_SIZE; ++i) {
+        Node* current = map->buckets[i];
+        while (current != NULL) {
+            printf("[%d] -> (%s, %p)\n", i, current->key, current->value);
+            current = current->next;
+        }
+    }
 }

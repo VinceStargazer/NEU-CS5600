@@ -62,12 +62,12 @@ void* cache_get(lru_cache* cache, void* key) {
 void cache_put(lru_cache* cache, void* key, void* value) {
     node_t* node = map_get(cache->map, key);
     if (node == NULL) {
-        // when key not found in cache, create a new entry
+        // when the key is not found in cache, create a new entry
         node = init_node(key, value);
         cache_add(cache, node);
         map_put(cache->map, key, node);
     } else {
-        // when key already exists, update it with the current value
+        // when the key already exists, update it with the current value
         node->value = value;
         cache_update(cache, node);
     }
@@ -77,4 +77,24 @@ void cache_put(lru_cache* cache, void* key, void* value) {
         cache_remove(cache, head);
         map_remove(cache->map, head->key);
     }
+}
+
+void display_cache(lru_cache* cache) {
+    node_t* current = cache->sentinel->next;
+    while (current->key != NULL) {
+        printf("key: %s\n", (char*)current->key);
+        printf("value: %p\n", current->value);
+        current = current->next;
+    }
+}
+
+void free_cache(lru_cache* cache) {
+    node_t* current = cache->sentinel;
+    while (current != NULL) {
+        node_t* temp = current;
+        current = current->next;
+        free(temp);
+    }
+    free_map(cache->map);
+    free(cache);
 }

@@ -58,6 +58,7 @@ message_t* retrieve_msg(lru_cache* cache, char* id) {
     // first, look for the message from cache
     message_t* msg = (message_t*)cache_get(cache, id);
     if (msg != NULL) { // ID hit
+        printf("Found message in cache\n");
         return msg;
     }
     // second, look for the message from disk
@@ -73,7 +74,7 @@ message_t* retrieve_msg(lru_cache* cache, char* id) {
             message_t* msg = init_msg(message.id, message.time, message.sender, 
                 message.receiver, message.content, message.flag);
             cache_put(cache, msg->id, msg);
-            free(id);
+            printf("Found message in disk\n");
             return msg;
         }
     }

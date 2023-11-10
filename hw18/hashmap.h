@@ -4,7 +4,7 @@
 #define HASH_MAP_SIZE 10000
 
 typedef struct Node {
-    void* key;
+    char* key;
     void* value;
     struct Node* next;
 } Node;
@@ -14,11 +14,12 @@ typedef struct {
     size_t size;
 } HashMap;
 
-unsigned int hash(void* key);
+unsigned int hash(char* key);
 HashMap* init_map();
-void* map_get(HashMap* map, void* key);
-void map_put(HashMap* map, void* key, void* value);
-void map_remove(HashMap* map, void* key);
-void map_free(HashMap* map);
+void* map_get(HashMap* map, char* key);
+void map_put(HashMap* map, char* key, void* value);
+void map_remove(HashMap* map, char* key);
+void free_map(HashMap* map);
+void display_map(HashMap* map);
 
 #endif

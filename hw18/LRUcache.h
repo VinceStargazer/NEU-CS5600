@@ -24,5 +24,7 @@ void cache_add(lru_cache* cache, node_t* node);
 void cache_update(lru_cache* cache, node_t* node);
 void* cache_get(lru_cache* cache, void* key);
 void cache_put(lru_cache* cache, void* key, void* value);
+void free_cache(lru_cache* cache);
+void display_cache(lru_cache* cache);
 
 #endif
