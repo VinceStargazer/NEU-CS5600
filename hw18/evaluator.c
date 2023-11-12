@@ -8,6 +8,11 @@
 #define COUNT 1000
 #define MAX_LINE_LENGTH 38
 
+/**
+ * This program tests the cache hit ratio by accessing 1000 random messages whose unique identifiers are stored in
+ * messages_id.dat. It appends the testing result to the file evaluation.txt
+*/
+
 // Function to generate a random integer within a specific range [min, max]
 int get_rand(int min, int max) {
     // Seed the random number generator with the current time
@@ -55,7 +60,7 @@ int main() {
     }
     fclose(input);
     
-    fprintf(output, "---Testing random accessing %d messages with a cache of capacity %d---\n", COUNT, cache_capacity);
+    fprintf(output, "---Test random accessing %d messages with a cache of capacity %d---\n", COUNT, cache_capacity);
     // Loop COUNT times to calculate cache hits and misses
     int hits = 0;
     srand((unsigned int)time(NULL));
@@ -70,6 +75,7 @@ int main() {
         }
     }
 
+    // Append test results
     fprintf(output, "Cache hits: %d\n", hits);
     fprintf(output, "Cache misses: %d\n", COUNT - hits);
     fprintf(output, "Cache hit ratio: %.2f%%\n", (double)hits / COUNT * 100);

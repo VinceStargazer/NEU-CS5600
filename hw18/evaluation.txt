@@ -1,16 +1,32 @@
----Testing random accessing 1000 messages with a cache of capacity 16---
+---Test random accessing 1000 messages with a cache of capacity 16---
 Cache hits: 8
 Cache misses: 992
 Cache hit ratio: 0.80%
----Testing random accessing 1000 messages with a cache of capacity 16---
+---Test random accessing 1000 messages with a cache of capacity 16---
 Cache hits: 14
 Cache misses: 986
 Cache hit ratio: 1.40%
----Testing random accessing 1000 messages with a cache of capacity 30---
+---Test random accessing 1000 messages with a cache of capacity 30---
 Cache hits: 24
 Cache misses: 976
 Cache hit ratio: 2.40%
----Testing random accessing 1000 messages with a cache of capacity 100---
+---Test random accessing 1000 messages with a cache of capacity 100---
 Cache hits: 89
 Cache misses: 911
 Cache hit ratio: 8.90%
+---Test random accessing 1000 messages with a cache of capacity 16---
+Cache hits: 14
+Cache misses: 986
+Cache hit ratio: 1.40%
+---Test random accessing 1000 messages with a cache of capacity 16---
+Cache hits: 16
+Cache misses: 984
+Cache hit ratio: 1.60%
+---Test random accessing 1000 messages with a cache of capacity 16---
+Cache hits: 11
+Cache misses: 989
+Cache hit ratio: 1.10%
+---Test random accessing 1000 messages with a cache of capacity 16---
+Cache hits: 19
+Cache misses: 981
+Cache hit ratio: 1.90%

@@ -16,6 +16,7 @@ unsigned int hash(char* key) {
 HashMap* init_map() {
     HashMap* map = (HashMap*)malloc(sizeof(HashMap));
     memset(map->buckets, 0, sizeof(Node*) * HASH_MAP_SIZE);
+    map->size = 0;
     return map;
 }
 

@@ -5,6 +5,10 @@
 #include "message.h"
 #include "get_env.h"
 
+/**
+ * This program executes multiple functions in message.c,  including message creation, storing, and retrieval
+ * according to the given command.
+*/
 int main() {
     int message_size = get_env_var("MESSAGE_SIZE");
     if (message_size == 0) {

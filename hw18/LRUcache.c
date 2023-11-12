@@ -74,6 +74,7 @@ void* cache_get(lru_cache* cache, void* key) {
     return node->value;
 }
 
+// Function to insert a key-value entry into the cache
 void cache_put(lru_cache* cache, void* key, void* value) {
     node_t* node = map_get(cache->map, key);
     if (node == NULL) {
@@ -88,6 +89,12 @@ void cache_put(lru_cache* cache, void* key, void* value) {
     }
 }
 
+// Function to free allocated memory for the node
+void free_node(node_t* node) {
+    free(node->value);
+    free(node);
+}
+
 // Function to add key-value pair to cache and replace a random page if overflowing (Algo 1)
 void cache_put_random(lru_cache* cache, void* key, void* value) {
     cache_put(cache, key, value);
@@ -100,6 +107,7 @@ void cache_put_random(lru_cache* cache, void* key, void* value) {
         }
         cache_remove(cache, current);
         map_remove(cache->map, current->key);
+        free_node(current);
     }
 }
 
@@ -111,6 +119,7 @@ void cache_put_LRU(lru_cache* cache, void* key, void* value) {
         node_t* head = cache->sentinel->next;
         cache_remove(cache, head);
         map_remove(cache->map, head->key);
+        free_node(head);
     }
 }
 
@@ -126,12 +135,13 @@ void display_cache(lru_cache* cache) {
 
 // Function to free allocated memory for the cache
 void free_cache(lru_cache* cache) {
-    node_t* current = cache->sentinel;
-    while (current != NULL) {
+    node_t* current = cache->sentinel->next;
+    while (current->key != NULL) {
         node_t* temp = current;
         current = current->next;
-        free(temp);
+        free_node(temp);
     }
+    free(cache->sentinel);
     free_map(cache->map);
     free(cache);
 }
