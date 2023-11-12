@@ -11,8 +11,6 @@
 
 // Function to generate a random integer within a specific range [min, max]
 int get_rand_int(int min, int max) {
-    // Seed the random number generator with the current time
-    srand((unsigned int)time(NULL));
     // Calculate the random number within the specified range
     int randomNum = rand() % (max - min + 1) + min;
     return randomNum;

@@ -17,6 +17,8 @@ typedef struct {
 message_t* init_msg(size_t size, char* id, time_t time, char* sender, char* receiver, char* content, int flag);
 message_t* create_msg(size_t size, char* sender, char* receiver, char* content, int flag);
 void store_msg(lru_cache* cache, size_t size, message_t* message);
+message_t* retrieve_msg_from_cache(lru_cache* cache, char* id);
+message_t* retrieve_msg_from_disk(lru_cache* cache, size_t size, char* id);
 message_t* retrieve_msg(lru_cache* cache, size_t size, char* id);
 
 #endif

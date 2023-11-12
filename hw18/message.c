@@ -53,15 +53,14 @@ void store_msg(lru_cache* cache, size_t size, message_t* message) {
     fclose(file);
 }
 
-// Function to retrieve a message from the LRU cache or the disk by the given ID. Returns NULL if message not found
-message_t* retrieve_msg(lru_cache* cache, size_t size, char* id) {
-    // first, look for the message from cache
+// Function to retrieve a message from the LRU cache. Returns NULL if message not found
+message_t* retrieve_msg_from_cache(lru_cache* cache, char* id) {
     message_t* msg = (message_t*)cache_get(cache, id);
-    if (msg != NULL) { // ID hit
-        printf("Found message in cache\n");
-        return msg;
-    }
-    // second, look for the message from disk
+    return msg;
+}
+
+// Function to retrieve a message from the disk by the given ID. Returns NULL if message not found
+message_t* retrieve_msg_from_disk(lru_cache* cache, size_t size, char* id) {
     FILE* file = fopen("messages.dat", "r");
     if (file == NULL) {
         perror("fopen");
@@ -74,10 +73,26 @@ message_t* retrieve_msg(lru_cache* cache, size_t size, char* id) {
             message_t* msg = init_msg(size, message.id, message.time, message.sender, 
                 message.receiver, message.content, message.flag);
             cache_put_LRU(cache, msg->id, msg);
-            printf("Found message in disk\n");
+            fclose(file);
             return msg;
         }
     }
     fclose(file);
     return NULL;
+}
+
+// Function to retrieve a message from the LRU cache or the disk by the given ID. Returns NULL if message not found
+message_t* retrieve_msg(lru_cache* cache, size_t size, char* id) {
+    // first, look for the message from cache
+    message_t* msg = retrieve_msg_from_cache(cache, id);
+    if (msg != NULL) { // ID hit
+        printf("Found message in cache\n");
+        return msg;
+    }
+    // second, look for the message from disk
+    msg = retrieve_msg_from_disk(cache, size, id);
+    if (msg != NULL) { // ID hit
+        printf("Found message in disk\n");
+    }
+    return msg;
 }

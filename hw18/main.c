@@ -3,33 +3,15 @@
 #include <string.h>
 #include <time.h>
 #include "message.h"
+#include "get_env.h"
 
 int main() {
-    // Open .env and locate global variables
-    FILE* env_file = fopen(".env", "r");
-    if (env_file == NULL) {
-        perror("Error opening .env file");
-        return -1;
-    }
-    int message_size = 0, cache_capacity = 0;
-    char line[BUFSIZ];
-    while (fgets(line, BUFSIZ, env_file) && (message_size == 0 || cache_capacity == 0)) {
-        // parse the input line by '=' to read key and value
-        char* equals = strchr(line, '=');
-        if (equals != NULL) {
-            *equals = '\0';
-            if (strcmp(line, "MESSAGE_SIZE") == 0) {
-                message_size = atoi(equals + 1);
-            } else if (strcmp(line, "CACHE_CAPACITY") == 0) {
-                cache_capacity = atoi(equals + 1);
-            }
-        }
-    }
-    fclose(env_file);
+    int message_size = get_env_var("MESSAGE_SIZE");
     if (message_size == 0) {
         perror("Message size not found in .env file");
         return -1;
     }
+    int cache_capacity = get_env_var("CACHE_CAPACITY");
     if (cache_capacity == 0) {
         perror("Cache capacity not found in .env file");
         return -1;
