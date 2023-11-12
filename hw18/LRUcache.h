@@ -17,13 +17,10 @@ typedef struct lru_cache {
     HashMap* map;
 } lru_cache;
 
-node_t* init_node(void* key, void* value);
 lru_cache* init_cache(size_t capacity);
-void cache_remove(lru_cache* cache, node_t* node);
-void cache_add(lru_cache* cache, node_t* node);
-void cache_update(lru_cache* cache, node_t* node);
 void* cache_get(lru_cache* cache, void* key);
-void cache_put(lru_cache* cache, void* key, void* value);
+void cache_put_random(lru_cache* cache, void* key, void* value);
+void cache_put_LRU(lru_cache* cache, void* key, void* value);
 void free_cache(lru_cache* cache);
 void display_cache(lru_cache* cache);
 

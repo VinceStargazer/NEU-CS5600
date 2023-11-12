@@ -82,8 +82,8 @@ int main() {
                 continue;
             }
             
-            message_t* message = create_msg(sender, receiver, content, flag);
-            store_msg(cache, message);
+            message_t* message = create_msg(message_size, sender, receiver, content, flag);
+            store_msg(cache, message_size, message);
             printf("A message of ID %s is created and stored.\n", message->id);
         } else if (strcmp(command, "r") == 0 || strcmp(command, "retrieve") == 0) {
             // Retrieve mode
@@ -91,7 +91,7 @@ int main() {
             printf("Enter the message ID: ");
             scanf(" %36[^\n]%*c", id);
 
-            message_t* message = retrieve_msg(cache, id);
+            message_t* message = retrieve_msg(cache, message_size, id);
             if (message == NULL) {
                 printf("Message not found!\n");
             } else {
@@ -101,6 +101,7 @@ int main() {
                 printf("\treceiver: %s\n", message->receiver);
                 printf("\tcontent: %s\n", message->content);
                 printf("\tflag: %d\n", message->flag);
+                printf("\tsize: %zu\n", sizeof(*message));
             }
         } else if (strcmp(command, "dc") == 0 || strcmp(command, "display cache") == 0) {
             display_cache(cache);

@@ -10,8 +10,8 @@ const char* MSG_FORMAT_OUT =
     "{\n\t\"id\": \"%s\", \n\t\"time\": %ld, \n\t\"sender\": \"%s\", \n\t\"receiver\": \"%s\", \n\t\"content\": \"%s\", \n\t\"flag\": %d\n}\n";
 
 // Function to create a message object based on every given field
-message_t* init_msg(char* id, time_t time, char* sender, char* receiver, char* content, int flag) {
-    message_t* message = (message_t*)malloc(sizeof(message_t));
+message_t* init_msg(size_t size, char* id, time_t time, char* sender, char* receiver, char* content, int flag) {
+    message_t* message = (message_t*)malloc(size);
     if (message == NULL) {
         perror("malloc");
         exit(EXIT_FAILURE);
@@ -26,22 +26,22 @@ message_t* init_msg(char* id, time_t time, char* sender, char* receiver, char* c
 }
 
 // Function to create the unique ID and current timestamp for init_msg()
-message_t* create_msg(char* sender, char* receiver, char* content, int flag) {
+message_t* create_msg(size_t size, char* sender, char* receiver, char* content, int flag) {
     char* id = (char*)malloc(37 * sizeof(char));
     if (id == NULL) {
         perror("malloc");
         exit(EXIT_FAILURE);
     }
     generate_uuid(id);
-    message_t* message = init_msg(id, time(NULL), sender, receiver, content, flag);
+    message_t* message = init_msg(size, id, time(NULL), sender, receiver, content, flag);
     free(id);
     return message;
 }
 
 // Function to store a message object to both the cache and disk in a form similar to JSON
-void store_msg(lru_cache* cache, message_t* message) {
+void store_msg(lru_cache* cache, size_t size, message_t* message) {
     // first, store the message to cache
-    cache_put(cache, message->id, message);
+    cache_put_LRU(cache, message->id, message);
     // second, store the message to disk
     FILE* file = fopen("messages.dat", "a");
     if (file == NULL) {
@@ -54,7 +54,7 @@ void store_msg(lru_cache* cache, message_t* message) {
 }
 
 // Function to retrieve a message from the LRU cache or the disk by the given ID. Returns NULL if message not found
-message_t* retrieve_msg(lru_cache* cache, char* id) {
+message_t* retrieve_msg(lru_cache* cache, size_t size, char* id) {
     // first, look for the message from cache
     message_t* msg = (message_t*)cache_get(cache, id);
     if (msg != NULL) { // ID hit
@@ -71,9 +71,9 @@ message_t* retrieve_msg(lru_cache* cache, char* id) {
     while (fscanf(file, MSG_FORMAT_IN, message.id, &message.time, message.sender, 
             message.receiver, message.content, &message.flag) == 6) {
         if (strcmp(message.id, id) == 0) { // ID hit
-            message_t* msg = init_msg(message.id, message.time, message.sender, 
+            message_t* msg = init_msg(size, message.id, message.time, message.sender, 
                 message.receiver, message.content, message.flag);
-            cache_put(cache, msg->id, msg);
+            cache_put_LRU(cache, msg->id, msg);
             printf("Found message in disk\n");
             return msg;
         }

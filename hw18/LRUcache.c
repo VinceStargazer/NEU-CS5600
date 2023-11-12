@@ -1,6 +1,22 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include "LRUcache.h"
+
+/**
+ * I use a doubly linked list and a hash table to implement LRU cache, which enables page lookup, insertion, update,
+ * and removal to be done in O(1) time complexity. There are two replacement algorithms that will be triggered if a 
+ * page is placed into the cache but no "slot" is found: Random Replacement (cache_put_random) and LRU (cache_put_LRU)
+*/
+
+// Function to generate a random integer within a specific range [min, max]
+int get_rand_int(int min, int max) {
+    // Seed the random number generator with the current time
+    srand((unsigned int)time(NULL));
+    // Calculate the random number within the specified range
+    int randomNum = rand() % (max - min + 1) + min;
+    return randomNum;
+}
 
 // Function to create a new node
 node_t* init_node(void* key, void* value) {
@@ -50,6 +66,7 @@ void cache_update(lru_cache* cache, node_t* node) {
     cache_add(cache, node);
 }
 
+// Function to retrieve a data entry from cache by key
 void* cache_get(lru_cache* cache, void* key) {
     node_t* node = (node_t*)map_get(cache->map, key);
     if (node == NULL) {
@@ -71,6 +88,26 @@ void cache_put(lru_cache* cache, void* key, void* value) {
         node->value = value;
         cache_update(cache, node);
     }
+}
+
+// Function to add key-value pair to cache and replace a random page if overflowing (Algo 1)
+void cache_put_random(lru_cache* cache, void* key, void* value) {
+    cache_put(cache, key, value);
+    // Random replacement: remove a page chosen at random
+    if (cache->map->size > cache->capacity) {
+        int index = get_rand_int(0, cache->capacity);
+        node_t* current = cache->sentinel->next;
+        for (int i = 0; i < index; i++) {
+            current = current->next;
+        }
+        cache_remove(cache, current);
+        map_remove(cache->map, current->key);
+    }
+}
+
+// Function to add a key-value entry to cache and replace the least recently used page if overflowing (Algo 2)
+void cache_put_LRU(lru_cache* cache, void* key, void* value) {
+    cache_put(cache, key, value);
     // LRU method: remove the least recently used data
     if (cache->map->size > cache->capacity) {
         node_t* head = cache->sentinel->next;
@@ -79,6 +116,7 @@ void cache_put(lru_cache* cache, void* key, void* value) {
     }
 }
 
+// Function to display the content of cache in stdout
 void display_cache(lru_cache* cache) {
     node_t* current = cache->sentinel->next;
     while (current->key != NULL) {
@@ -88,6 +126,7 @@ void display_cache(lru_cache* cache) {
     }
 }
 
+// Function to free allocated memory for the cache
 void free_cache(lru_cache* cache) {
     node_t* current = cache->sentinel;
     while (current != NULL) {

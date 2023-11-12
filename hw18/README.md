@@ -4,7 +4,11 @@ This program uses a doubly linked list data structure to store the messages in J
 # How to run this program
 1.  Run `make` in the terminal.
 2.  Run `/main`.
-3.  If you want to create a new message, enter the command `c`/`create`. If you want to retrieve a message by its unique id, enter the command `r`/`retrieve`. If you want to abort this program, enter the command `q`/`quit`
+3.  Enter the command for different purposes:
+    * `c`/`create`: Create a new message
+    * `r`/`retrieve`: Retrieve a message by its unique id
+    * `q`/`quit`: Abort the program
+    * `dc`/`display cache`: Display the current program cache
 4.  Follow the prompts and offer your answers in stdin. Note that "sender" or "receiver" should be within 20 characters, "content" should be within 200 characters and not include a new line character (otherwise, the program will treat the answer as complete), "flag" should be either 1 (delivered) or 0 (not delivered), and "id" should be 36 characters (otherwise it doesn't match our UUID design).
 
 # How to check the correctness
