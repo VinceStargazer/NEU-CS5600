@@ -9,7 +9,7 @@
 #define MAX_LINE_LENGTH 38
 
 /**
- * This program tests the cache hit ratio by accessing 1000 random messages whose unique identifiers are stored in
+ * This program tests the cache hit ratio by accessing COUNT random messages whose unique identifiers are stored in
  * messages_id.dat. It appends the testing result to the file evaluation.txt
 */
 

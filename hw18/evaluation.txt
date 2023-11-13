@@ -30,3 +30,11 @@ Cache hit ratio: 1.10%
 Cache hits: 19
 Cache misses: 981
 Cache hit ratio: 1.90%
+---Test random accessing 1000 messages with a cache of capacity 16---
+Cache hits: 17
+Cache misses: 983
+Cache hit ratio: 1.70%
+---Test random accessing 1000 messages with a cache of capacity 16---
+Cache hits: 14
+Cache misses: 986
+Cache hit ratio: 1.40%

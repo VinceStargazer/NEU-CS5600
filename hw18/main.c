@@ -91,8 +91,6 @@ int main() {
             }
         } else if (strcmp(command, "dc") == 0 || strcmp(command, "display cache") == 0) {
             display_cache(cache);
-        } else if (strcmp(command, "dm") == 0 || strcmp(command, "display map") == 0) {
-            display_map(cache->map);
         } else {
             printf("Command not found!\n");
         }

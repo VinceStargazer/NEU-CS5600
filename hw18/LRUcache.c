@@ -4,9 +4,10 @@
 #include "LRUcache.h"
 
 /**
- * I use a doubly linked list and a hash table to implement LRU cache, which enables page lookup, insertion, update,
- * and removal to be done in O(1) time complexity. There are two replacement algorithms that will be triggered if a 
- * page is placed into the cache but no "slot" is found: Random Replacement (cache_put_random) and LRU (cache_put_LRU)
+ * I use a doubly linked list (DDL) and a hash table to implement LRU cache, which enables page lookup, insertion, update,
+ * and removal to be done in O(1) time complexity. In this data structure, the least recently used page is placed at the 
+ * head of the DDL while the most recently used one is at its tail. There are two replacement algorithms that will be 
+ * triggered if a page is placed into the cache but no "slot" is found: Random Replacement (cache_put_random) and LRU (cache_put_LRU)
 */
 
 // Function to generate a random integer within a specific range [min, max]
@@ -82,6 +83,7 @@ void cache_put(lru_cache* cache, void* key, void* value) {
         node = init_node(key, value);
         cache_add(cache, node);
         map_put(cache->map, key, node);
+        cache->size++;
     } else {
         // when the key already exists, update it with the current value
         node->value = value;
@@ -99,7 +101,7 @@ void free_node(node_t* node) {
 void cache_put_random(lru_cache* cache, void* key, void* value) {
     cache_put(cache, key, value);
     // Random replacement: remove a page chosen at random
-    if (cache->map->size > cache->capacity) {
+    if (cache->size > cache->capacity) {
         int index = get_rand_int(0, cache->capacity);
         node_t* current = cache->sentinel->next;
         for (int i = 0; i < index; i++) {
@@ -108,6 +110,7 @@ void cache_put_random(lru_cache* cache, void* key, void* value) {
         cache_remove(cache, current);
         map_remove(cache->map, current->key);
         free_node(current);
+        cache->size--;
     }
 }
 
@@ -115,11 +118,12 @@ void cache_put_random(lru_cache* cache, void* key, void* value) {
 void cache_put_LRU(lru_cache* cache, void* key, void* value) {
     cache_put(cache, key, value);
     // LRU method: remove the least recently used data
-    if (cache->map->size > cache->capacity) {
+    if (cache->size > cache->capacity) {
         node_t* head = cache->sentinel->next;
         cache_remove(cache, head);
         map_remove(cache->map, head->key);
         free_node(head);
+        cache->size--;
     }
 }
 
