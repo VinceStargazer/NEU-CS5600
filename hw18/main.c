@@ -20,6 +20,8 @@ int main() {
         perror("Cache capacity not found in .env file");
         return -1;
     }
+    int is_LRU = get_env_var("IS_LRU");
+    srand((unsigned int)time(NULL));
 
     // Initialize a LRU cache
     lru_cache* cache = init_cache(cache_capacity);
@@ -69,7 +71,7 @@ int main() {
             }
             
             message_t* message = create_msg(message_size, sender, receiver, content, flag);
-            store_msg(cache, message_size, message);
+            store_msg(cache, message_size, message, is_LRU);
             printf("A message of ID %s is created and stored.\n", message->id);
         } else if (strcmp(command, "r") == 0 || strcmp(command, "retrieve") == 0) {
             // Retrieve mode
@@ -77,7 +79,7 @@ int main() {
             printf("Enter the message ID: ");
             scanf(" %36[^\n]%*c", id);
 
-            message_t* message = retrieve_msg(cache, message_size, id);
+            message_t* message = retrieve_msg(cache, message_size, id, is_LRU);
             if (message == NULL) {
                 printf("Message not found!\n");
             } else {

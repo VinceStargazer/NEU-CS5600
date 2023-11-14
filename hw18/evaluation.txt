@@ -1,40 +1,70 @@
----Test random accessing 1000 messages with a cache of capacity 16---
-Cache hits: 8
-Cache misses: 992
-Cache hit ratio: 0.80%
----Test random accessing 1000 messages with a cache of capacity 16---
-Cache hits: 14
-Cache misses: 986
-Cache hit ratio: 1.40%
----Test random accessing 1000 messages with a cache of capacity 30---
-Cache hits: 24
-Cache misses: 976
-Cache hit ratio: 2.40%
----Test random accessing 1000 messages with a cache of capacity 100---
-Cache hits: 89
-Cache misses: 911
-Cache hit ratio: 8.90%
----Test random accessing 1000 messages with a cache of capacity 16---
-Cache hits: 14
-Cache misses: 986
-Cache hit ratio: 1.40%
----Test random accessing 1000 messages with a cache of capacity 16---
-Cache hits: 16
-Cache misses: 984
-Cache hit ratio: 1.60%
----Test random accessing 1000 messages with a cache of capacity 16---
-Cache hits: 11
-Cache misses: 989
-Cache hit ratio: 1.10%
----Test random accessing 1000 messages with a cache of capacity 16---
-Cache hits: 19
-Cache misses: 981
-Cache hit ratio: 1.90%
----Test random accessing 1000 messages with a cache of capacity 16---
-Cache hits: 17
-Cache misses: 983
-Cache hit ratio: 1.70%
----Test random accessing 1000 messages with a cache of capacity 16---
-Cache hits: 14
-Cache misses: 986
-Cache hit ratio: 1.40%
+---Random accessing 50 messages 1000 times with cache capacity 16---
+LRU replacement:
+	Cache hits: 335
+	Cache misses: 665
+	Cache hit ratio: 33.50%
+Random replacement:
+	Cache hits: 301
+	Cache misses: 699
+	Cache hit ratio: 30.10%
+
+---Random accessing 50 messages 1000 times with cache capacity 16---
+LRU replacement:
+	Cache hits: 318
+	Cache misses: 682
+	Cache hit ratio: 31.80%
+Random replacement:
+	Cache hits: 311
+	Cache misses: 689
+	Cache hit ratio: 31.10%
+
+---Random accessing 1000 messages 1000 times with cache capacity 16---
+LRU replacement:
+	Cache hits: 18
+	Cache misses: 982
+	Cache hit ratio: 1.80%
+Random replacement:
+	Cache hits: 14
+	Cache misses: 986
+	Cache hit ratio: 1.40%
+
+---Random accessing 1000 messages 1000 times with cache capacity 16---
+LRU replacement:
+	Cache hits: 18
+	Cache misses: 982
+	Cache hit ratio: 1.80%
+Random replacement:
+	Cache hits: 22
+	Cache misses: 978
+	Cache hit ratio: 2.20%
+
+---Random accessing 1000 messages 1000 times with cache capacity 32---
+LRU replacement:
+	Cache hits: 32
+	Cache misses: 968
+	Cache hit ratio: 3.20%
+Random replacement:
+	Cache hits: 38
+	Cache misses: 962
+	Cache hit ratio: 3.80%
+
+---Random accessing 100 messages 1000 times with cache capacity 32---
+LRU replacement:
+	Cache hits: 319
+	Cache misses: 681
+	Cache hit ratio: 31.90%
+Random replacement:
+	Cache hits: 319
+	Cache misses: 681
+	Cache hit ratio: 31.90%
+
+---Random accessing 100 messages 1000 times with cache capacity 32---
+LRU replacement:
+	Cache hits: 326
+	Cache misses: 674
+	Cache hit ratio: 32.60%
+Random replacement:
+	Cache hits: 338
+	Cache misses: 662
+	Cache hit ratio: 33.80%
+

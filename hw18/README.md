@@ -14,13 +14,13 @@ This practicum uses a doubly linked list data structure to store the messages in
 # How to test the cache mechanism
 1.  Run `make` in the terminal. (If not done yet)
 2.  Run `./test` to test my official test cases. You can also test the cache mechanism in the following manual way:
-3.  (Optional) In .env file, change 'MESSAGE_SIZE' and 'CACHE_CAPACITY' to be desired values.
+3.  (Optional) In .env file, change 'MESSAGE_SIZE', 'CACHE_CAPACITY', and 'IS_LRU' (whether to use LRU replacement or random replacement strategy for the cache) to be desired values.
 4.  Run the main program.
 5.  Use `r`/`retrieve` command to retrieve messages as many as CACHE_CAPACITY from messages.dat. Meanwhile, use `dc`/`display cache` command constantly to check if the id of the latest added message ranks at the tail of the cache (tail -> most recently used page).
 6.  Retrieve another new message from messages.dat. This time, the number of messages stored in the cache should remain CACHE_CAPACITY. One message got 'kicked out' and you might check if that message was originally placed at the head of this cache (head -> least recently used page).
 
 # How to evaluate cache hits
-1.  (Optional) Change the value of COUNT in line 8 of evaluator.c to be the desired sample size. Change the 'CACHE_CAPACITY' value in .env file to be the desired cache capacity.
+1.  (Optional) Change the value of SAMPLE_SIZE in line 8 of evaluator.c to be the desired sample size. Change the value of TEST_COUNT in line 8 of evaluator.c to be the desired testing times. Change the 'CACHE_CAPACITY' value in .env file to be the desired cache capacity.
 2.  Run `make` in the terminal. (If not done yet)
 3.  Run `./evaluator`.
 4.  Check the lowest part of evaluation.txt for the latest test result.

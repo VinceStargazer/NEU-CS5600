@@ -7,7 +7,7 @@
 #define MAX_LINE_LENGTH 38
 
 /**
- * This file tests page insertion, page update, and page replacement in a LRU cache
+ * This file tests page insertion, page update, and page replacement in a cache based on LRU replacement
 */
 
 int main() {
@@ -38,7 +38,7 @@ int main() {
     int success = 1; // flag to indicate test result
     for (int i = 0; fgets(line, MAX_LINE_LENGTH, file) && i < cache_capacity; i++) {
         line[strcspn(line, "\n")] = '\0';
-        if (retrieve_msg_from_disk(cache, message_size, line) == NULL) {
+        if (retrieve_msg_from_disk(cache, message_size, line, 1) == NULL) {
             printf("Error: Message ID not found in disk\n");
             success = 0;
         }
@@ -79,7 +79,7 @@ int main() {
     char* second_id = (char*)cache->sentinel->next->next->key;
     char* tail_id = (char*)cache->sentinel->prev->key;
     message_t* new_msg = create_msg(message_size, "Vince", "Jennifer", "That must be nice!", 0);
-    store_msg(cache, message_size, new_msg);
+    store_msg(cache, message_size, new_msg, 1);
     success = 1; // retore flag
     if (cache->size != cache_capacity) {
         printf("Error: Incorrect cache size %zu\n", cache->size);

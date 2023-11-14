@@ -3,6 +3,7 @@
 #include <string.h>
 #include <time.h>
 #include "message.h"
+#include "get_env.h"
 
 const char* MSG_FORMAT_IN = 
     "{\n\t\"id\": \"%[^\"]\", \n\t\"time\": %ld, \n\t\"sender\": \"%[^\"]\", \n\t\"receiver\": \"%[^\"]\", \n\t\"content\": \"%[^\"]\", \"flag\": %d\n}\n";
@@ -39,9 +40,14 @@ message_t* create_msg(size_t size, char* sender, char* receiver, char* content, 
 }
 
 // Function to store a message object to both the cache and disk in a form similar to JSON
-void store_msg(lru_cache* cache, size_t size, message_t* message) {
+void store_msg(lru_cache* cache, size_t size, message_t* message, int is_LRU) {
     // first, store the message to cache
-    cache_put_LRU(cache, message->id, message);
+    if (is_LRU) {
+        cache_put_LRU(cache, message->id, message);
+    } else {
+        cache_put_random(cache, message->id, message);
+    }
+    
     // second, store the message to disk
     FILE* file = fopen("messages.dat", "a");
     if (file == NULL) {
@@ -60,7 +66,7 @@ message_t* retrieve_msg_from_cache(lru_cache* cache, char* id) {
 }
 
 // Function to retrieve a message from the disk by the given ID. Returns NULL if message not found
-message_t* retrieve_msg_from_disk(lru_cache* cache, size_t size, char* id) {
+message_t* retrieve_msg_from_disk(lru_cache* cache, size_t size, char* id, int is_LRU) {
     FILE* file = fopen("messages.dat", "r");
     if (file == NULL) {
         perror("fopen");
@@ -72,7 +78,11 @@ message_t* retrieve_msg_from_disk(lru_cache* cache, size_t size, char* id) {
         if (strcmp(message.id, id) == 0) { // ID hit
             message_t* msg = init_msg(size, message.id, message.time, message.sender, 
                 message.receiver, message.content, message.flag);
-            cache_put_LRU(cache, msg->id, msg);
+            if (is_LRU) {
+                cache_put_LRU(cache, msg->id, msg);
+            } else {
+                cache_put_random(cache, msg->id, msg);
+            }
             fclose(file);
             return msg;
         }
@@ -82,7 +92,7 @@ message_t* retrieve_msg_from_disk(lru_cache* cache, size_t size, char* id) {
 }
 
 // Function to retrieve a message from the LRU cache or the disk by the given ID. Returns NULL if message not found
-message_t* retrieve_msg(lru_cache* cache, size_t size, char* id) {
+message_t* retrieve_msg(lru_cache* cache, size_t size, char* id, int is_LRU) {
     // first, look for the message from cache
     message_t* msg = retrieve_msg_from_cache(cache, id);
     if (msg != NULL) { // ID hit
@@ -90,7 +100,7 @@ message_t* retrieve_msg(lru_cache* cache, size_t size, char* id) {
         return msg;
     }
     // second, look for the message from disk
-    msg = retrieve_msg_from_disk(cache, size, id);
+    msg = retrieve_msg_from_disk(cache, size, id, is_LRU);
     if (msg != NULL) { // ID hit
         printf("Found message in disk\n");
     }
