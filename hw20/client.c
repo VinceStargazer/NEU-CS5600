@@ -176,22 +176,5 @@ int main(int argc, char *argv[])
     error("Invalid action");
   }
 
-  // // Send the message to server:
-  // if (send(socket_desc, client_message, strlen(client_message), 0) < 0) {
-  //   printf("Unable to send message\n");
-  //   return -1;
-  // }
-
-  // // Receive the server's response:
-  // if (recv(socket_desc, server_message, sizeof(server_message), 0) < 0) {
-  //   printf("Error while receiving server's msg\n");
-  //   return -1;
-  // }
-
-  // printf("Server's response: %s\n",server_message);
-
-  // // Close the socket:
-  // close(socket_desc);
-
   return 0;
 }

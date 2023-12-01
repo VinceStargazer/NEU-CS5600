@@ -17,6 +17,18 @@
 
 #define MAX_BUFFER_SIZE 1024
 
+// Function to determine whether a file name already exists
+int isFileExist(char *file_name)
+{
+  FILE *fp = fopen(file_name, "r");
+  if (fp == NULL)
+  {
+    return 0;
+  }
+  fclose(fp);
+  return 1;
+}
+
 // Function to handle write operation from the server side
 void handleWrite(int client_sock)
 {
@@ -24,8 +36,18 @@ void handleWrite(int client_sock)
   char *local_file;
   receiveString(client_sock, &local_file);
 
+  // Find the correct version number
+  char file_name[strlen(local_file) + 3];
+  sprintf(file_name, "%s", local_file);
+  int ver_num = 1;
+  while (isFileExist(file_name))
+  {
+    sprintf(file_name, "%s_%d", local_file, ver_num);
+    ver_num++;
+  }
+  
   // Open local file
-  FILE *fp = fopen(local_file, "w");
+  FILE *fp = fopen(file_name, "w");
   if (fp == NULL)
   {
     error("Error opening local file for writing");
@@ -42,7 +64,6 @@ void handleWrite(int client_sock)
   // Free memory and close file
   free(local_file);
   fclose(fp);
-  close(client_sock);
 }
 
 // Function to handle get operation from the server side
@@ -73,7 +94,6 @@ void handleGet(int client_sock)
   // Free memory and close file
   free(local_file);
   fclose(fp);
-  close(client_sock);
 }
 
 // Function to handle remove operation from the server side
@@ -95,9 +115,8 @@ void handleRemove(int client_sock)
     error("Error removing file");
   }
 
-  // Free memory and close socket
+  // Free memory
   free(local_path);
-  close(client_sock);
 }
 
 // Function to handle list operation from the server side
@@ -128,7 +147,6 @@ void handleList(int client_sock)
 
   // Free memory and close socket
   free(local_file);
-  close(client_sock);
 }
 
 int main(void)
