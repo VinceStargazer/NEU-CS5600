@@ -14,6 +14,8 @@
 #include "helpers.h"
 
 #define MAX_BUFFER_SIZE 1024
+#define PORT_NUMBER 2000
+#define IP_ADDRESS "127.0.0.1"
 
 // Function to create a socket and send the action
 int create_socket(char *action)
@@ -31,8 +33,8 @@ int create_socket(char *action)
 
   // Set port and IP the same as server-side:
   server_addr.sin_family = AF_INET;
-  server_addr.sin_port = htons(2000);
-  server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+  server_addr.sin_port = htons(PORT_NUMBER);
+  server_addr.sin_addr.s_addr = inet_addr(IP_ADDRESS);
 
   // Send connection request to server:
   if (connect(socket_desc, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
@@ -44,6 +46,15 @@ int create_socket(char *action)
   // Send action type to server
   sendString(socket_desc, action);
   return socket_desc;
+}
+
+// Function to get and display operation response from the server
+void displayResponse(int sockfd)
+{
+  char *response;
+  receiveString(sockfd, &response);
+  printf("Response from server: %s\n", response);
+  free(response);
 }
 
 // Function to handle write operation from the client side
@@ -110,6 +121,9 @@ void handleRemove(char *remote_path)
   int sockfd = create_socket("RM");
   sendString(sockfd, remote_path);
 
+  // Receive a request response
+  displayResponse(sockfd);
+
   // Close socket
   close(sockfd);
 }
@@ -126,6 +140,22 @@ void handleList(char *remote_file)
   recv(sockfd, version_info, sizeof(version_info), 0);
   printf("Versioning Information:\n%s\n", version_info);
 
+  // Receive a request response
+  displayResponse(sockfd);
+
+  // Close socket
+  close(sockfd);
+}
+
+// Function to send a STOP signal to the server
+void handleStop()
+{
+  // Create a socket
+  int sockfd = create_socket("STOP");
+
+  // Receive a request response
+  displayResponse(sockfd);
+
   // Close socket
   close(sockfd);
 }
@@ -133,7 +163,7 @@ void handleList(char *remote_file)
 int main(int argc, char *argv[])
 {
   // Validate arguments
-  if (argc < 3)
+  if (argc < 2)
   {
     error("Insufficient arguments");
   }
@@ -170,6 +200,10 @@ int main(int argc, char *argv[])
       error("Usage: ./rfs LS <remote-file-path>");
     }
     handleList(argv[2]);
+  }
+  else if (strcmp(action, "STOP") == 0)
+  { // Turn off the server
+    handleStop();
   }
   else
   {
