@@ -18,7 +18,7 @@
 #define IP_ADDRESS "127.0.0.1"
 
 // Function to create a socket and send the action
-int create_socket(char *action)
+int createSocket(const char *action)
 {
   int socket_desc;
   struct sockaddr_in server_addr;
@@ -49,16 +49,18 @@ int create_socket(char *action)
 }
 
 // Function to get and display operation response from the server
-void displayResponse(int sockfd)
+void getResponse(int sockfd)
 {
-  char *response;
-  receiveString(sockfd, &response);
-  printf("Response from server: %s\n", response);
-  free(response);
+  char response[MAX_BUFFER_SIZE];
+  if (recv(sockfd, response, sizeof(response), 0) < 0)
+  {
+    error("Unable to receive from the server");
+  }
+  printf("Response from the server:\n%s", response);
 }
 
 // Function to handle write operation from the client side
-void handleWrite(char *local_file, char *remote_file)
+void handleWrite(const char *local_file, const char *remote_file)
 {
   // Open local file
   FILE *fp = fopen(local_file, "r");
@@ -68,7 +70,7 @@ void handleWrite(char *local_file, char *remote_file)
   }
 
   // Create a socket
-  int sockfd = create_socket("WRITE");
+  int sockfd = createSocket("WRITE");
   sendString(sockfd, remote_file);
 
   // Read from the local file and write to the remote file
@@ -82,13 +84,16 @@ void handleWrite(char *local_file, char *remote_file)
     }
   }
 
+  // Receive a request response
+  getResponse(sockfd);
+
   // Close file and socket
   fclose(fp);
   close(sockfd);
 }
 
 // Function to handle get operation from the client side
-void handleGet(char *local_file, char *remote_file)
+void handleGet(const char *local_file, const char *remote_file, int ver)
 {
   // Open local file
   FILE *fp = fopen(local_file, "w");
@@ -98,11 +103,15 @@ void handleGet(char *local_file, char *remote_file)
   }
 
   // Create a socket
-  int sockfd = create_socket("GET");
-  sendString(sockfd, remote_file);
+  int sockfd = createSocket("GET");
+  sendString(sockfd, remote_file); // Send remote file path
+  if (send(sockfd, &ver, sizeof(ver), 0) < 0) // Send version number
+  {
+    error("Error sending version number");
+  }
 
   // Read data from the server and write to the local file
-  char *buffer[MAX_BUFFER_SIZE];
+  char buffer[MAX_BUFFER_SIZE];
   ssize_t bytesRead;
   while ((bytesRead = recv(sockfd, buffer, sizeof(buffer), 0)) > 0)
   {
@@ -115,33 +124,49 @@ void handleGet(char *local_file, char *remote_file)
 }
 
 // Function to handle remove operation from the client side
-void handleRemove(char *remote_path)
+void handleRemove(const char *remote_path)
 {
   // Create a socket
-  int sockfd = create_socket("RM");
+  int sockfd = createSocket("RM");
   sendString(sockfd, remote_path);
 
   // Receive a request response
-  displayResponse(sockfd);
+  getResponse(sockfd);
 
   // Close socket
   close(sockfd);
 }
 
 // Function to handle list operation from the client side
-void handleList(char *remote_file)
+void handleList(const char *remote_file, const char *record_address)
 {
   // Create a socket
-  int sockfd = create_socket("LS");
+  int sockfd = createSocket("LS");
   sendString(sockfd, remote_file);
 
-  // Receive and print versioning information from the server
-  char version_info[MAX_BUFFER_SIZE];
-  recv(sockfd, version_info, sizeof(version_info), 0);
-  printf("Versioning Information:\n%s\n", version_info);
+  // Receive versioning information from the server
+  char response[MAX_BUFFER_SIZE];
+  if (recv(sockfd, response, sizeof(response), 0) < 0)
+  {
+    error("Unable to receive from the server");
+  }
 
-  // Receive a request response
-  displayResponse(sockfd);
+  if (record_address == NULL) // No appointed address, print to stdout
+  {
+    printf("%s", response);
+  }
+  else
+  {
+    FILE *fp = fopen(record_address, "w");
+    if (fp == NULL)
+    {
+      error("Error opening local file for writing");
+    }
+
+    // Redirect output to local file
+    fprintf(fp, "%s", response);
+    fclose(fp);
+  }
 
   // Close socket
   close(sockfd);
@@ -151,10 +176,10 @@ void handleList(char *remote_file)
 void handleStop()
 {
   // Create a socket
-  int sockfd = create_socket("STOP");
+  int sockfd = createSocket("STOP");
 
   // Receive a request response
-  displayResponse(sockfd);
+  getResponse(sockfd);
 
   // Close socket
   close(sockfd);
@@ -171,19 +196,52 @@ int main(int argc, char *argv[])
 
   if (strcmp(action, "WRITE") == 0)
   { // Question 1
-    if (argc != 4)
+    if (argc == 4)
+    {
+      handleWrite(argv[2], argv[3]);
+    }
+    else if (argc == 3)
+    { // Missing remote file name defaults to local file name
+      handleWrite(argv[2], argv[2]);
+    }
+    else
     {
       error("Usage: ./rfs WRITE <local-file-path> <remote-file-path>");
     }
-    handleWrite(argv[2], argv[3]);
   }
   else if (strcmp(action, "GET") == 0)
   { // Question 2
-    if (argc != 4)
+    if (strncmp(argv[2], "-v", 2) == 0)
     {
-      error("Usage: ./rfs GET <remote-file-path> <local-file-path>");
+      int v = atoi(argv[2] + 2);
+      if (argc == 5)
+      {
+        handleGet(argv[4], argv[3], v);
+      }
+      else if (argc == 4)
+      {
+        handleGet(argv[3], argv[3], v);
+      }
+      else
+      {
+        error("Usage: ./rfs GET -v[number] <remote-file-path> <local-file-path>");
+      }
     }
-    handleGet(argv[3], argv[2]);
+    else
+    {
+      if (argc == 4)
+      {
+        handleGet(argv[3], argv[2], -1);
+      }
+      else if (argc == 3)
+      { // Missing local file name defaults to remote file name
+        handleGet(argv[2], argv[2], -1);
+      }
+      else
+      {
+        error("Usage: ./rfs GET <remote-file-path> <local-file-path>");
+      }
+    }
   }
   else if (strcmp(action, "RM") == 0)
   { // Question 3
@@ -195,11 +253,22 @@ int main(int argc, char *argv[])
   }
   else if (strcmp(action, "LS") == 0)
   { // Question 6
-    if (argc != 3)
+    if (argc == 3)
+    {
+      handleList(argv[2], NULL);
+    }
+    else if (argc == 5)
+    {
+      if (strcmp(argv[3], ">") != 0)
+      {
+        error("Usage: ./rfs LS <remote-file-path> > <local_file_path>");
+      }
+      handleList(argv[2], argv[4]);
+    }
+    else
     {
       error("Usage: ./rfs LS <remote-file-path>");
     }
-    handleList(argv[2]);
   }
   else if (strcmp(action, "STOP") == 0)
   { // Turn off the server
