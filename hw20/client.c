@@ -15,7 +15,6 @@
 
 #define MAX_BUFFER_SIZE 1024
 #define PORT_NUMBER 2000
-#define IP_ADDRESS "127.0.0.1"
 
 // Function to create a socket and send the action
 int createSocket(const char *action)
@@ -27,36 +26,48 @@ int createSocket(const char *action)
 
   if (socket_desc < 0)
   {
-    error("Unable to create socket\n");
+    error("Unable to create socket");
   }
-  printf("Socket created successfully\n");
 
   // Set port and IP the same as server-side:
   server_addr.sin_family = AF_INET;
   server_addr.sin_port = htons(PORT_NUMBER);
-  server_addr.sin_addr.s_addr = inet_addr(IP_ADDRESS);
+  char *ip_address = getConfigVar("IP_ADDRESS");
+  if (ip_address == NULL)
+  {
+    error("Unable to retrieve IP address from .config");
+  }
+  server_addr.sin_addr.s_addr = inet_addr(ip_address);
 
   // Send connection request to server:
   if (connect(socket_desc, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
   {
-    error("Unable to connect\n");
+    error("Unable to connect");
   }
   printf("Connected with server successfully\n");
 
   // Send action type to server
-  sendString(socket_desc, action);
+  if (!sendString(socket_desc, action))
+  {
+    exit(EXIT_FAILURE);
+  }
+
   return socket_desc;
 }
 
 // Function to get and display operation response from the server
 void getResponse(int sockfd)
 {
-  char response[MAX_BUFFER_SIZE];
-  if (recv(sockfd, response, sizeof(response), 0) < 0)
+  char *response;
+  if (receiveString(sockfd, &response))
   {
-    error("Unable to receive from the server");
+    printf("Response from the server:\n\"%s\"\n", response);
+    free(response);
   }
-  printf("Response from the server:\n%s", response);
+  else
+  {
+    exit(EXIT_FAILURE);
+  }
 }
 
 // Function to handle write operation from the client side
@@ -71,20 +82,26 @@ void handleWrite(const char *local_file, const char *remote_file)
 
   // Create a socket
   int sockfd = createSocket("WRITE");
-  sendString(sockfd, remote_file);
+  if (!sendString(sockfd, remote_file))
+  {
+    exit(EXIT_FAILURE);
+  }
 
   // Read from the local file and write to the remote file
   char buffer[MAX_BUFFER_SIZE];
-  size_t bytesRead;
-  while ((bytesRead = fread(buffer, 1, sizeof(buffer), fp)) > 0)
+  size_t bytesRead = fread(buffer, 1, sizeof(buffer), fp);
+  if (bytesRead == 0)
   {
-    if (send(sockfd, buffer, bytesRead, 0) < 0)
-    {
-      error("Error sending data to the server");
-    }
+    error("Error reading data from local file");
   }
 
-  // Receive a request response
+  buffer[bytesRead] = '\0';
+  if (!sendString(sockfd, buffer))
+  {
+    exit(EXIT_FAILURE);
+  }
+
+  // Display the response from the server
   getResponse(sockfd);
 
   // Close file and socket
@@ -104,19 +121,37 @@ void handleGet(const char *local_file, const char *remote_file, int ver)
 
   // Create a socket
   int sockfd = createSocket("GET");
-  sendString(sockfd, remote_file); // Send remote file path
-  if (send(sockfd, &ver, sizeof(ver), 0) < 0) // Send version number
+
+  // Send remote file path
+  if (!sendString(sockfd, remote_file))
+  {
+    exit(EXIT_FAILURE);
+  }
+
+  // Send version number       
+  if (send(sockfd, &ver, sizeof(ver), 0) < 0) 
   {
     error("Error sending version number");
   }
 
-  // Read data from the server and write to the local file
-  char buffer[MAX_BUFFER_SIZE];
-  ssize_t bytesRead;
-  while ((bytesRead = recv(sockfd, buffer, sizeof(buffer), 0)) > 0)
+  // Receive data from the server to save
+  char *buffer;
+  int len = receiveString(sockfd, &buffer);
+  if (len)
   {
-    fwrite(buffer, 1, bytesRead, fp);
+    if (strncmp(buffer, "Error", strlen("Error")) == 0)
+    {
+      error(buffer);
+    }
+    fwrite(buffer, 1, len, fp);
   }
+  else
+  {
+    exit(EXIT_FAILURE);
+  }
+
+  // Display the response from the server
+  getResponse(sockfd);
 
   // Close file and socket
   fclose(fp);
@@ -128,7 +163,10 @@ void handleRemove(const char *remote_path)
 {
   // Create a socket
   int sockfd = createSocket("RM");
-  sendString(sockfd, remote_path);
+  if (!sendString(sockfd, remote_path))
+  {
+    exit(EXIT_FAILURE);
+  }
 
   // Receive a request response
   getResponse(sockfd);
@@ -142,13 +180,16 @@ void handleList(const char *remote_file, const char *record_address)
 {
   // Create a socket
   int sockfd = createSocket("LS");
-  sendString(sockfd, remote_file);
+  if (!sendString(sockfd, remote_file))
+  {
+    exit(EXIT_FAILURE);
+  }
 
   // Receive versioning information from the server
-  char response[MAX_BUFFER_SIZE];
-  if (recv(sockfd, response, sizeof(response), 0) < 0)
+  char *response;
+  if (!receiveString(sockfd, &response))
   {
-    error("Unable to receive from the server");
+    exit(EXIT_FAILURE);
   }
 
   if (record_address == NULL) // No appointed address, print to stdout
@@ -168,7 +209,8 @@ void handleList(const char *remote_file, const char *record_address)
     fclose(fp);
   }
 
-  // Close socket
+  // Close socket and free memory
+  free(response);
   close(sockfd);
 }
 

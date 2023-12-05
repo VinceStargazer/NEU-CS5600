@@ -11,40 +11,47 @@ void error(const char *msg)
 }
 
 // Function to send a string from socket
-void sendString(int sockfd, const char *str)
+int sendString(int sockfd, const char *str)
 {
   size_t len = strlen(str);
   if (send(sockfd, &len, sizeof(len), 0) < 0)
   {
-    error("Error sending string length");
+    perror("Error sending string length");
+    return 0;
   }
   if (send(sockfd, str, len, 0) < 0)
   {
-    error("Error sending string data");
+    perror("Error sending string data");
+    return 0;
   }
+  return (int)len;
 }
 
 // Function to receive a string from socket
-void receiveString(int sockfd, char **str)
+int receiveString(int sockfd, char **str)
 {
   size_t len;
   if (recv(sockfd, &len, sizeof(len), 0) < 0)
   {
-    error("Error receiving string length");
+    perror("Error receiving string length");
+    return 0;
   }
 
   *str = (char *)malloc(len + 1); // +1 for null terminator
   if (*str == NULL)
   {
-    error("Error allocating memory for string");
+    perror("Error allocating memory for string");
+    return 0;
   }
 
   if (recv(sockfd, *str, len, 0) < 0)
   {
-    error("Error receiving string data");
+    perror("Error receiving string data");
+    return 0;
   }
 
   (*str)[len] = '\0'; // Null-terminate the received string
+  return (int)len;
 }
 
 // Function to determine whether a file name already exists
@@ -71,7 +78,8 @@ char *findFilePrefix(const char *file_name, char delimiter)
   char *prefix = (char *)malloc(len + 1);
   if (prefix == NULL)
   {
-    error("Memory allocation failed");
+    perror("Error allocating memory");
+    return NULL;
   }
   strncpy(prefix, file_name, len);
   prefix[len] = '\0';
@@ -89,7 +97,8 @@ char *findFileSuffix(const char *file_name, char delimiter)
   char *suffix = (char *)malloc(strlen(dot + 1) + 1);
   if (suffix == NULL)
   {
-    error("Memory allocation failed");
+    perror("Error allocating memory");
+    return NULL;
   }
   strcpy(suffix, dot + 1);
   suffix[strlen(dot + 1)] = '\0';
@@ -117,4 +126,32 @@ void createFileName(char *new_file, char *prev_file, int ver_num)
     free(prefix);
     free(suffix);
   }
+}
+
+char *getConfigVar(const char *target)
+{
+  // Open .config and locate global variables
+  FILE *file = fopen(".config", "r");
+  if (file == NULL)
+  {
+    perror("Error opening .config file");
+    return NULL;
+  }
+  char line[BUFSIZ];
+  while (fgets(line, BUFSIZ, file))
+  {
+    // parse the input line by '=' to read key and value
+    char *equals = strchr(line, '=');
+    if (equals != NULL)
+    {
+      *equals = '\0';
+      if (strcmp(line, target) == 0)
+      {
+        fclose(file);
+        return equals + 1;
+      }
+    }
+  }
+  fclose(file);
+  return NULL;
 }

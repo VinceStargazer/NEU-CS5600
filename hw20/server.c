@@ -19,7 +19,6 @@
 #define MAX_BUFFER_SIZE 1024
 #define VER_BUFFER_SIZE 256
 #define PORT_NUMBER 2000
-#define IP_ADDRESS "127.0.0.1"
 #define VERSION_PATH ".file_VERSION"
 #define LOCK_FILE ".file_LOCK"
 
@@ -127,24 +126,11 @@ void removeVersionInfo(const char *file_name)
   }
 }
 
-// Print a success message and send it to client
-void handleSuccess(int client_sock, const char *message)
-{
-  printf("%s", message);
-  if (send(client_sock, message, strlen(message), 0) < 0)
-  {
-    perror("Error sending message to the client");
-  }
-}
-
 // Print a failure message and send it to client
 void handleFailure(int client_sock, const char *message)
 {
   perror(message);
-  if (send(client_sock, message, strlen(message), 0) < 0)
-  {
-    perror("Error sending message to the client");
-  }
+  sendString(client_sock, message);
 }
 
 // Function to create a file lock in the given directory
@@ -162,11 +148,13 @@ int createLock(char *directory, char **lock_path)
     free(directory);
   }
 
+  // When lock already exists in current folder
   if (isFileExist(*lock_path))
   {
     return 0;
   }
 
+  // Create the lock
   FILE *lockfp = fopen(*lock_path, "w");
   if (lockfp == NULL)
   {
@@ -182,13 +170,17 @@ void handleWrite(int client_sock)
 {
   // Receive client's remote file path
   char *local_file;
-  receiveString(client_sock, &local_file);
+  if (!receiveString(client_sock, &local_file))
+  {
+    handleFailure(client_sock, "Error receiving file path for writing");
+    return;
+  }
 
   // Find the latest version number (Question 5)
   char *file_name = (char *)malloc(strlen(local_file) + 3);
   if (file_name == NULL)
   {
-    handleFailure(client_sock, "Memory allocation failed");
+    handleFailure(client_sock, "Error allocating memory");
     return;
   }
 
@@ -203,30 +195,33 @@ void handleWrite(int client_sock)
     updateLatestVersion(local_file, ver_num);
   }
 
-  // Open local file
-  FILE *fp = fopen(file_name, "w");
-  if (fp == NULL)
-  {
-    handleFailure(client_sock, "Error opening local file for writing");
-    return;
-  }
-
   // Lock the current directory to avoid concurrent modification
   char *prefix = findFilePrefix(local_file, '/');
   char *lock_path;
 
   if (!createLock(prefix, &lock_path))
   {
-    handleFailure(client_sock, "Couldn't create file lock");
+    handleFailure(client_sock, "Error creating file lock");
     return;
   }
 
-  // Read data from the client and write to the local file (critical section)
-  char buffer[MAX_BUFFER_SIZE];
-  ssize_t bytesRead;
-  while ((bytesRead = recv(client_sock, buffer, sizeof(buffer), 0)) > 0)
+  // Open local file
+  FILE *fp = fopen(file_name, "w");
+  if (fp == NULL)
   {
-    fwrite(buffer, 1, bytesRead, fp);
+    handleFailure(client_sock, "Error opening remote file for writing");
+    return;
+  }
+
+  char *buffer;
+  int len = receiveString(client_sock, &buffer);
+  if (len)
+  {
+    fwrite(buffer, 1, len, fp);
+  }
+  else
+  {
+    return;
   }
 
   // Release the file lock
@@ -237,10 +232,11 @@ void handleWrite(int client_sock)
   }
 
   char response[MAX_BUFFER_SIZE];
-  sprintf(response, "Successfully writing to file '%s'\n", file_name);
-  handleSuccess(client_sock, response);
+  sprintf(response, "Successfully writing to file '%s'", file_name);
+  sendString(client_sock, response);
 
   // Free memory and close file
+  free(buffer);
   free(lock_path);
   free(local_file);
   free(file_name);
@@ -252,18 +248,22 @@ void handleGet(int client_sock)
 {
   // Receive client's remote file path
   char *local_file;
-  receiveString(client_sock, &local_file);
+  if (!receiveString(client_sock, &local_file))
+  {
+    handleFailure(client_sock, "Error receiving file path for reading");
+    return;
+  }
 
   // Receive the version number of file
   int ver_num;
   if (recv(client_sock, &ver_num, sizeof(ver_num), 0) < 0)
   {
-    perror("Error receiving version number");
+    handleFailure(client_sock, "Error receiving version number");
     return;
   }
   if (ver_num == -1)
   {
-    // No appointed version number -> use the latest version 
+    // No appointed version number -> use the latest version
     ver_num = getLatestVersion(local_file);
   }
 
@@ -271,32 +271,40 @@ void handleGet(int client_sock)
   char *file_name = (char *)malloc(strlen(local_file) + 3);
   if (file_name == NULL)
   {
-    perror("Memory allocation failed");
+    handleFailure(client_sock, "Error allocating memory");
     return;
   }
-  
+
   createFileName(file_name, local_file, ver_num);
 
   // Open local file
   FILE *fp = fopen(file_name, "r");
   if (fp == NULL)
   {
-    perror("Error opening local file for reading");
+    handleFailure(client_sock, "Error opening remote file for reading");
     return;
   }
 
   // Read from the local file and write to the remote file
   char buffer[MAX_BUFFER_SIZE];
-  size_t bytesRead;
-  while ((bytesRead = fread(buffer, 1, sizeof(buffer), fp)) > 0)
+  size_t bytesRead = fread(buffer, 1, sizeof(buffer), fp);
+  if (bytesRead == 0)
   {
-    if (send(client_sock, buffer, bytesRead, 0) < 0)
-    {
-      perror("Error sending data to the client");
-      return;
-    }
+    handleFailure(client_sock, "Error reading data from remote file");
+    return;
   }
-  printf("Successfully reading from file '%s'\n", file_name);
+
+  buffer[bytesRead] = '\0';
+  if (!sendString(client_sock, buffer))
+  {
+    handleFailure(client_sock, "Error sending data to client");
+    return;
+  }
+
+  // Send response to the client
+  char response[VER_BUFFER_SIZE];
+  sprintf(response, "Successfully reading from file '%s'", file_name);
+  sendString(client_sock, response);
 
   // Free memory and close file
   free(local_file);
@@ -309,12 +317,15 @@ void handleRemove(int client_sock)
 {
   // Receive client's remote file path
   char *local_path;
-  receiveString(client_sock, &local_path);
+  if (!receiveString(client_sock, &local_path))
+  {
+    return;
+  }
 
   char *file_name = (char *)malloc(strlen(local_path) + 3);
   if (file_name == NULL)
   {
-    handleFailure(client_sock, "Memory allocation failed");
+    handleFailure(client_sock, "Error allocating memory");
     return;
   }
 
@@ -330,7 +341,6 @@ void handleRemove(int client_sock)
     {
       char warning[VER_BUFFER_SIZE];
       sprintf(warning, "File '%s' not exist\n", file_name);
-      perror(warning);
       strcat(response, warning);
       continue;
     }
@@ -340,13 +350,11 @@ void handleRemove(int client_sock)
     char message[VER_BUFFER_SIZE];
     if (system(command) == 0)
     {
-      sprintf(message, "File '%s' removed successfully\n", file_name);
-      printf("%s", message);
+      sprintf(message, "File '%s' is removed successfully\n", file_name);
     }
     else
     {
       sprintf(message, "Error removing file '%s'\n", file_name);
-      perror(message);
     }
     strcat(response, message);
   }
@@ -357,11 +365,11 @@ void handleRemove(int client_sock)
     removeVersionInfo(local_path);
   }
 
-   // Send response to the client
-  if (send(client_sock, response, strlen(response), 0) < 0)
-  {
-    perror("Error sending response to the client");
-  }
+  // Trim new line character
+  response[strlen(response) - 1] = '\0';
+
+  // Send response to the client
+  sendString(client_sock, response);
 
   // Free memory
   free(local_path);
@@ -373,12 +381,15 @@ void handleList(int client_sock)
 {
   // Receive client's remote file path
   char *local_file;
-  receiveString(client_sock, &local_file);
+  if (!receiveString(client_sock, &local_file))
+  {
+    return;
+  }
 
   char *file_name = (char *)malloc(strlen(local_file) + 3);
   if (file_name == NULL)
   {
-    handleFailure(client_sock, "Memory allocation failed");
+    handleFailure(client_sock, "Error allocating memory");
     return;
   }
 
@@ -421,27 +432,39 @@ void handleList(int client_sock)
     strcat(response, version_info);
   }
 
+  // Trim new line character
+  response[strlen(response) - 1] = '\0';
+
   // Send versioning information to the client
-  if (send(client_sock, response, strlen(response), 0) < 0)
-  {
-    perror("Error sending response to the client");
-  }
-  printf("Successfully listing versioning about file '%s'\n", local_file);
+  sendString(client_sock, response);
 
   // Free memory
   free(local_file);
   free(file_name);
 }
 
+// Function to handle stop operation from the server side
+void handleStop(int client_sock, int socket_desc)
+{
+  sendString(client_sock, "Server terminated by client");
+  shutdown(client_sock, SHUT_RDWR);
+  close(client_sock);
+  close(socket_desc);
+  exit(EXIT_SUCCESS);
+}
+
 // Thread function to handle each client connection
 void *handleClient(void *arg)
 {
-  int client_sock = *((int *)arg);
+  int *sockets = (int *)arg;
+  int client_sock = sockets[0], socket_desc = sockets[1];
 
   // Receive client's action string
   char *action;
-  receiveString(client_sock, &action);
-  printf("Action attempt from client: %s\n", action);
+  if (!receiveString(client_sock, &action))
+  {
+    return NULL;
+  }
 
   if (strcmp(action, "WRITE") == 0)
   { // Question 1
@@ -461,8 +484,8 @@ void *handleClient(void *arg)
   }
   else if (strcmp(action, "STOP") == 0)
   { // Turn off the server
-    handleSuccess(client_sock, "Server terminated by client\n");
-    exit(EXIT_SUCCESS);
+    free(action);
+    handleStop(client_sock, socket_desc);
   }
   else
   {
@@ -489,14 +512,18 @@ int main(void)
 
   if (socket_desc < 0)
   {
-    error("Error while creating socket\n");
+    error("Error while creating socket");
   }
-  printf("Socket created successfully\n");
 
   // Set port and IP:
   server_addr.sin_family = AF_INET;
   server_addr.sin_port = htons(PORT_NUMBER);
-  server_addr.sin_addr.s_addr = inet_addr(IP_ADDRESS);
+  char *ip_address = getConfigVar("IP_ADDRESS");
+  if (ip_address == NULL)
+  {
+    error("Error retrieving IP address from .config");
+  }
+  server_addr.sin_addr.s_addr = inet_addr(ip_address);
 
   // Bind to the set port and IP:
   if (bind(socket_desc, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
@@ -529,7 +556,8 @@ int main(void)
 
     // Create a thread for the client connection
     pthread_t tid;
-    if (pthread_create(&tid, NULL, handleClient, (void *)&client_sock) != 0)
+    int sockets[] = {client_sock, socket_desc};
+    if (pthread_create(&tid, NULL, handleClient, (void *)sockets) != 0)
     {
       perror("Error creating thread");
       close(client_sock);
