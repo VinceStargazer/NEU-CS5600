@@ -1,9 +1,11 @@
+Connected with server successfully
 Versioning Information about remote_files/test_write.txt:
 
 File: remote_files/test_write.txt
 Version: v0
-Last modified: Mon Dec  4 23:41:46 2023
+Last modified: Tue Dec  5 01:08:10 2023
 
 File: remote_files/test_write_1.txt
 Version: v1
-Last modified: Mon Dec  4 23:41:46 2023
+Last modified: Tue Dec  5 01:08:10 2023
+

@@ -194,7 +194,7 @@ void handleList(const char *remote_file, const char *record_address)
 
   if (record_address == NULL) // No appointed address, print to stdout
   {
-    printf("%s", response);
+    printf("%s\n", response);
   }
   else
   {
